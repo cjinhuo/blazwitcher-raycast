@@ -1,0 +1,101 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "blazwitcher-raycast",
+  "title": "Blazwitcher 拼音搜索",
+  "description": "使用拼音、首字母和中英文混合搜索 Chrome 标签页、书签与历史记录，单栏展示并快速跳转。",
+  "icon": "extension-icon.png",
+  "author": "cjinhuo",
+  "license": "MIT",
+  "platforms": [
+    "macOS"
+  ],
+  "categories": [
+    "Productivity",
+    "Navigation"
+  ],
+  "commands": [
+    {
+      "name": "search-all",
+      "title": "搜索浏览器",
+      "subtitle": "Blazwitcher",
+      "description": "统一拼音搜索 Chrome 标签页、书签和历史记录",
+      "mode": "view",
+      "keywords": [
+        "chrome",
+        "pinyin",
+        "blazwitcher",
+        "搜索"
+      ]
+    },
+    {
+      "name": "search-tabs",
+      "title": "搜索标签页",
+      "subtitle": "Blazwitcher",
+      "description": "拼音搜索已打开的 Chrome 标签页并切换",
+      "mode": "view"
+    },
+    {
+      "name": "search-bookmarks",
+      "title": "搜索书签",
+      "subtitle": "Blazwitcher",
+      "description": "拼音搜索 Chrome 书签并打开",
+      "mode": "view"
+    },
+    {
+      "name": "search-history",
+      "title": "搜索历史记录",
+      "subtitle": "Blazwitcher",
+      "description": "拼音搜索 Chrome 历史记录并打开",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "historyLimit",
+      "title": "历史记录读取上限",
+      "description": "按最近访问排序读取的条数，默认 20000；上限 100000。拼音搜索在这些记录中进行。",
+      "type": "textfield",
+      "default": "20000",
+      "required": false
+    },
+    {
+      "name": "includeIncognito",
+      "title": "无痕标签页",
+      "label": "包含无痕窗口中的标签页",
+      "description": "只在内存中读取；不会写入历史记录或缓存。",
+      "type": "checkbox",
+      "default": false,
+      "required": false
+    }
+  ],
+  "scripts": {
+    "dev": "ray develop",
+    "build": "ray build -e dist",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run lint && npm run build",
+    "test:local": "tsx scripts/inspect-local.ts"
+  },
+  "dependencies": {
+    "@raycast/api": "^2.4.1",
+    "@raycast/utils": "^2.3.1",
+    "text-search-engine": "1.5.3"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2",
+    "react": "^19.2.0",
+    "tsx": "^4.23.0",
+    "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "text-search-engine": {
+      "react": "$react"
+    }
+  }
+}
