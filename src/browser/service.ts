@@ -72,12 +72,14 @@ export class BrowserService {
       JSON.stringify(this.options) !== JSON.stringify(normalized) ||
       (profileId !== undefined && profileId !== this.profileId);
     this.options = normalized;
+    // 先保存选择意图，读取完成前的刷新也必须使用新配置。
+    if (profileId !== undefined) this.profileId = profileId;
     if (changed) {
       this.entries = { tab: [], bookmark: [], history: [] };
       this.states = emptyStates();
       this.changed(true);
     }
-    await this.load(profileId);
+    await this.load();
   }
 
   refresh() {
@@ -98,7 +100,7 @@ export class BrowserService {
     this.cache = undefined;
   }
 
-  private async load(requestedProfile?: string) {
+  private async load() {
     const generation = ++this.generation;
     const live = () => generation === this.generation;
     const options = this.options;
@@ -142,7 +144,7 @@ export class BrowserService {
         const found = await this.io.discoverProfiles();
         if (!live()) return;
         this.profiles = found.profiles;
-        const next = requestedProfile ?? this.profileId;
+        const next = this.profileId;
         this.profileId =
           next === "all" || found.profiles.some((p) => p.id === next)
             ? next
