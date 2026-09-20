@@ -150,47 +150,52 @@ export class BrowserService {
         const selected = found.profiles.filter(
           (p) => this.profileId === "all" || p.id === this.profileId,
         );
-        for (const source of ["bookmark", "history"] as const) {
-          if (!wanted.includes(source)) continue;
-          const entries: BrowserEntry[] = [];
-          const warnings: string[] = [];
-          if (!selected.length)
-            warnings.push(
-              "未找到 Chrome 配置，请先运行 Google Chrome 后刷新。",
-            );
-          for (const profile of selected) {
-            if (!live()) return;
-            try {
-              if (source === "bookmark") {
-                const result = await this.io.readBookmarks(profile);
-                entries.push(...result.entries);
-                warnings.push(
-                  ...result.warnings.map(
-                    (message) => `${profile.name}：${message}`,
-                  ),
-                );
-              } else
-                entries.push(
-                  ...(await this.io.readHistory(profile, options.historyLimit)),
-                );
-            } catch (error) {
-              warnings.push(`${profile.name}：${describeError(error)}`);
+        await Promise.all(
+          (["bookmark", "history"] as const).map(async (source) => {
+            if (!wanted.includes(source)) return;
+            const entries: BrowserEntry[] = [];
+            const warnings: string[] = [];
+            if (!selected.length)
+              warnings.push(
+                "未找到 Chrome 配置，请先运行 Google Chrome 后刷新。",
+              );
+            for (const profile of selected) {
+              if (!live()) return;
+              try {
+                if (source === "bookmark") {
+                  const result = await this.io.readBookmarks(profile);
+                  entries.push(...result.entries);
+                  warnings.push(
+                    ...result.warnings.map(
+                      (message) => `${profile.name}：${message}`,
+                    ),
+                  );
+                } else
+                  entries.push(
+                    ...(await this.io.readHistory(
+                      profile,
+                      options.historyLimit,
+                    )),
+                  );
+              } catch (error) {
+                warnings.push(`${profile.name}：${describeError(error)}`);
+              }
             }
-          }
-          if (!live()) return;
-          if (source === "history")
-            entries.sort((a, b) => (b.visitedAt ?? 0) - (a.visitedAt ?? 0));
-          this.entries[source] =
-            source === "history"
-              ? entries.slice(0, options.historyLimit)
-              : entries;
-          this.states[source] = {
-            loading: false,
-            warnings,
-            count: this.entries[source].length,
-          };
-          this.changed(true);
-        }
+            if (!live()) return;
+            if (source === "history")
+              entries.sort((a, b) => (b.visitedAt ?? 0) - (a.visitedAt ?? 0));
+            this.entries[source] =
+              source === "history"
+                ? entries.slice(0, options.historyLimit)
+                : entries;
+            this.states[source] = {
+              loading: false,
+              warnings,
+              count: this.entries[source].length,
+            };
+            this.changed(true);
+          }),
+        );
       } catch (error) {
         if (!live()) return;
         for (const source of ["bookmark", "history"] as const) {
