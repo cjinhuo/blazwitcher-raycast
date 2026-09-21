@@ -3,6 +3,7 @@ import { discoverProfiles } from "./profiles";
 import { readBookmarks } from "./bookmarks";
 import { readHistory } from "./history";
 import { SearchIndex } from "../search/engine";
+import type { StartupPreviewCache } from "./preview-cache";
 import {
   isScope,
   normalizeBrowserOptions,
@@ -40,12 +41,14 @@ export class BrowserService {
   private version = 0;
   private generation = 0;
   private latestRequest = 0;
+  private previewEpoch = 0;
   private searchToken = 0;
   private cache?: { key: string; results: SearchResult[]; requestId: number };
 
   constructor(
     private publish: (state: DataSnapshot) => void,
     private io = readers,
+    private previews?: StartupPreviewCache,
   ) {}
 
   snapshot(): DataSnapshot {
@@ -57,12 +60,15 @@ export class BrowserService {
     };
   }
 
-  private changed(reindex = false) {
-    if (reindex)
-      this.index = new SearchIndex(Object.values(this.entries).flat());
-    this.version++;
-    this.searchToken++;
-    this.cache = undefined;
+  private changed(source?: Source | "all") {
+    if (source) {
+      if (source === "all")
+        this.index = new SearchIndex(Object.values(this.entries).flat());
+      else this.index.replaceSource(source, this.entries[source]);
+      this.version++;
+      this.searchToken++;
+      this.cache = undefined;
+    }
     this.publish(this.snapshot());
   }
 
@@ -72,18 +78,31 @@ export class BrowserService {
       JSON.stringify(this.options) !== JSON.stringify(normalized) ||
       (profileId !== undefined && profileId !== this.profileId);
     this.options = normalized;
+    if (!normalized.startupPreview) this.clearPreviewCache();
     // 先保存选择意图，读取完成前的刷新也必须使用新配置。
     if (profileId !== undefined) this.profileId = profileId;
     if (changed) {
       this.entries = { tab: [], bookmark: [], history: [] };
       this.states = emptyStates();
-      this.changed(true);
+      this.changed("all");
     }
-    await this.load();
+    await this.load(true);
   }
 
   refresh() {
     return this.load();
+  }
+
+  clearPreviewCache() {
+    this.previewEpoch++;
+    const cleared = this.previews?.clear() ?? true;
+    for (const source of ["bookmark", "history"] as const) {
+      if (!this.states[source].cached) continue;
+      this.entries[source] = [];
+      this.states[source] = { ...this.states[source], cached: false, count: 0 };
+      this.changed(source);
+    }
+    return cleared;
   }
 
   pause() {
@@ -100,10 +119,11 @@ export class BrowserService {
     this.cache = undefined;
   }
 
-  private async load() {
+  private async load(preview = false) {
     const generation = ++this.generation;
     const live = () => generation === this.generation;
     const options = this.options;
+    const previewEpoch = this.previewEpoch;
     const wanted = sources.filter(
       (source) => options.scope === "all" || source === options.scope,
     );
@@ -136,7 +156,7 @@ export class BrowserService {
           warnings: [describeError(error)],
         };
       }
-      this.changed(true);
+      this.changed("tab");
     };
     const loadFiles = async () => {
       if (!wanted.some((s) => s !== "tab")) return;
@@ -152,6 +172,33 @@ export class BrowserService {
         const selected = found.profiles.filter(
           (p) => this.profileId === "all" || p.id === this.profileId,
         );
+        if (preview && options.startupPreview && this.previews) {
+          for (const source of ["bookmark", "history"] as const) {
+            if (!wanted.includes(source) || this.entries[source].length)
+              continue;
+            const cached = selected.flatMap(
+              (profile) =>
+                this.previews!.read(
+                  source,
+                  profile,
+                  source === "history" ? options.historyLimit : 100,
+                ) ?? [],
+            );
+            if (!cached.length) continue;
+            if (source === "history")
+              cached.sort((a, b) => (b.visitedAt ?? 0) - (a.visitedAt ?? 0));
+            this.entries[source] =
+              source === "history"
+                ? cached.slice(0, options.historyLimit)
+                : cached;
+            this.states[source] = {
+              ...this.states[source],
+              count: this.entries[source].length,
+              cached: true,
+            };
+            this.changed(source);
+          }
+        }
         await Promise.all(
           (["bookmark", "history"] as const).map(async (source) => {
             if (!wanted.includes(source)) return;
@@ -166,20 +213,37 @@ export class BrowserService {
               try {
                 if (source === "bookmark") {
                   const result = await this.io.readBookmarks(profile);
+                  if (!live()) return;
                   entries.push(...result.entries);
                   warnings.push(
                     ...result.warnings.map(
                       (message) => `${profile.name}：${message}`,
                     ),
                   );
-                } else
-                  entries.push(
-                    ...(await this.io.readHistory(
-                      profile,
-                      options.historyLimit,
-                    )),
+                  if (
+                    options.startupPreview &&
+                    previewEpoch === this.previewEpoch
+                  ) {
+                    if (result.warnings.length)
+                      this.previews?.remove(source, profile);
+                    else this.previews?.write(source, profile, result.entries);
+                  }
+                } else {
+                  const result = await this.io.readHistory(
+                    profile,
+                    options.historyLimit,
                   );
+                  if (!live()) return;
+                  entries.push(...result);
+                  if (
+                    options.startupPreview &&
+                    previewEpoch === this.previewEpoch
+                  )
+                    this.previews?.write(source, profile, result);
+                }
               } catch (error) {
+                if (!live()) return;
+                this.previews?.remove(source, profile);
                 warnings.push(`${profile.name}：${describeError(error)}`);
               }
             }
@@ -192,10 +256,11 @@ export class BrowserService {
                 : entries;
             this.states[source] = {
               loading: false,
+              cached: false,
               warnings,
               count: this.entries[source].length,
             };
-            this.changed(true);
+            this.changed(source);
           }),
         );
       } catch (error) {
@@ -209,7 +274,7 @@ export class BrowserService {
             count: 0,
           };
         }
-        this.changed(true);
+        this.changed("all");
       }
     };
     await Promise.all([loadTabs(), loadFiles()]);

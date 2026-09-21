@@ -3,6 +3,7 @@ export interface SourceState {
   loading: boolean;
   warnings: string[];
   count: number;
+  cached?: boolean;
 }
 export interface DataSnapshot {
   version: number;
@@ -33,12 +34,14 @@ export interface BrowserOptions {
   scope: Scope;
   historyLimit: number;
   includeIncognito: boolean;
+  startupPreview: boolean;
 }
 
 export const defaultBrowserOptions: BrowserOptions = {
   scope: "all",
   historyLimit: 20000,
   includeIncognito: false,
+  startupPreview: true,
 };
 
 export function isScope(value: unknown): value is Scope {
@@ -60,5 +63,6 @@ export function normalizeBrowserOptions(
         ? Math.min(limit, 100000)
         : 20000,
     includeIncognito: value.includeIncognito === true,
+    startupPreview: value.startupPreview !== false,
   };
 }
