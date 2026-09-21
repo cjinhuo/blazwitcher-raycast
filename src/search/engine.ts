@@ -77,12 +77,44 @@ export class SearchIndex {
     });
   }
 
+  private match(
+    key: string,
+    source: string,
+    query: string,
+    fallbackQuery: string,
+  ) {
+    const direct = source.indexOf(query);
+    if (direct >= 0) return [[direct, direct + query.length - 1]] as Range[];
+    let mapping = this.mappings.get(key);
+    if (!mapping) {
+      mapping = extractBoundaryMapping(source);
+      // 标题与组合字段共用展开规模预算，避免长 URL 的边界对象累积。
+      const units = mapping.boundary.length + mapping.originalIndices.length;
+      if (this.mappingUnits + units <= 20000) {
+        this.mappings.set(key, mapping);
+        this.mappingUnits += units;
+      }
+    }
+    const ranges = searchSentenceByBoundaryMapping(mapping, query).hitRanges;
+    // 原顺序失败时只重试一次，防止短词先占用长词；仍由原引擎保证位置不重复。
+    return (
+      ranges ??
+      (fallbackQuery !== query
+        ? searchSentenceByBoundaryMapping(mapping, fallbackQuery).hitRanges
+        : undefined)
+    );
+  }
+
   async search(
     query: string,
     scope: Scope,
     cancelled: () => boolean = () => false,
   ): Promise<SearchResult[]> {
     const normalized = query.trim().toLocaleLowerCase();
+    const fallbackQuery = normalized
+      .split(/\s+/)
+      .sort((a, b) => b.length - a.length)
+      .join(" ");
     // 只用于排除必定不匹配的记录，实际匹配与命中范围仍由引擎计算。
     let requiredLetters = 0;
     for (const char of normalized) {
@@ -107,28 +139,16 @@ export class SearchIndex {
         });
         continue;
       }
-      // 与引擎一致：连续原文命中优先，也不必为此构造拼音边界。
-      const direct = row.lower.indexOf(normalized);
-      let hitRanges: Range[] | undefined;
-      if (direct >= 0) {
-        hitRanges = [[direct, direct + normalized.length - 1]];
-      } else {
-        let mapping = this.mappings.get(row.entry.id);
-        if (!mapping) {
-          mapping = extractBoundaryMapping(row.lower);
-          // 按展开规模限制缓存，而非记录条数；长 URL 的边界对象占用可很大。
-          const units =
-            mapping.boundary.length + mapping.originalIndices.length;
-          if (this.mappingUnits + units <= 20000) {
-            this.mappings.set(row.entry.id, mapping);
-            this.mappingUnits += units;
-          }
-        }
-        hitRanges = searchSentenceByBoundaryMapping(
-          mapping,
+      // 完整标题命中优先，网址的字面命中不能遮掉标题的拼音相关度。
+      const lowerTitle = row.title.toLocaleLowerCase();
+      const hitRanges =
+        this.match(
+          `title:${row.entry.id}`,
+          lowerTitle,
           normalized,
-        ).hitRanges;
-      }
+          fallbackQuery,
+        ) ??
+        this.match(`all:${row.entry.id}`, row.lower, normalized, fallbackQuery);
       if (!hitRanges) continue;
       const ranges = normalizeRanges(
         hitRanges.map(([a, b]): Range => [
@@ -151,7 +171,6 @@ export class SearchIndex {
       const matched = ranges.reduce((sum, [a, b]) => sum + b - a + 1, 0);
       const span = ranges.at(-1)![1] - ranges[0][0] + 1;
       const titleOnly = titleRanges.length > 0 && urlRanges.length === 0;
-      const lowerTitle = row.title.toLocaleLowerCase();
       const score =
         (lowerTitle === normalized
           ? 1000
