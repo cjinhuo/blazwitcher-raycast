@@ -66,6 +66,28 @@
       "type": "checkbox",
       "default": false,
       "required": false
+    },
+    {
+      "name": "sourceShortcuts",
+      "title": "来源切换快捷键",
+      "description": "统一搜索中，0/1/2/3 分别切换全部、标签页、书签、历史并保留关键词。更改后重新打开命令。",
+      "type": "dropdown",
+      "default": "cmd-shift",
+      "required": false,
+      "data": [
+        {
+          "title": "⌘⇧0 / 1 / 2 / 3",
+          "value": "cmd-shift"
+        },
+        {
+          "title": "⌃⇧0 / 1 / 2 / 3",
+          "value": "ctrl-shift"
+        },
+        {
+          "title": "关闭（保留动作菜单）",
+          "value": "none"
+        }
+      ]
     }
   ],
   "scripts": {
