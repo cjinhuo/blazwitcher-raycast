@@ -226,6 +226,14 @@ export default function SearchBrowser({
             });
           if (entry.incognito)
             accessories.push({ icon: Icon.EyeDisabled, tooltip: "无痕标签" });
+          if (entry.source === "history" && entry.visitedAt !== undefined) {
+            const visited = new Date(entry.visitedAt);
+            if (!Number.isNaN(visited.getTime()))
+              accessories.push({
+                date: visited,
+                tooltip: `最近访问：${visited.toLocaleString("zh-CN", { hour12: false })}`,
+              });
+          }
           accessories.push({
             text: sourceNames[entry.source],
             tooltip: entry.profile?.name ?? "Chrome",
