@@ -178,3 +178,48 @@ test("关闭无痕偏好时立刻清除旧索引，离开命令停止接受延�
   await loading;
   assert.equal(service.snapshot().states.tab.count, 0);
 });
+
+for (const selectedId of ["Profile 1", "all"])
+  test(`切换配置 ${selectedId} 尚未完成时刷新，保留用户的新选择`, async () => {
+    const workProfile = { ...profile, id: "Profile 1", name: "工作" };
+    let discoveryCount = 0;
+    let complete!: (value: {
+      profiles: (typeof profile)[];
+      defaultId: string;
+    }) => void;
+    const found = { profiles: [profile, workProfile], defaultId: "Default" };
+    const service = new BrowserService(() => {}, {
+      ...readers,
+      discoverProfiles: async () => {
+        if (++discoveryCount === 2)
+          return new Promise((resolve) => {
+            complete = resolve;
+          });
+        return found;
+      },
+      readBookmarks: async (selected) => ({
+        entries: [
+          { ...tab, id: selected.id, source: "bookmark", profile: selected },
+        ],
+        warnings: [],
+      }),
+    });
+    const options = { ...defaultBrowserOptions, scope: "bookmark" as const };
+    await service.configure(options);
+    const switching = service.configure(options, selectedId);
+    await service.refresh();
+    complete(found);
+    await switching;
+    assert.equal(service.snapshot().profileId, selectedId);
+    const page = await service.search({
+      requestId: 1,
+      version: service.snapshot().version,
+      query: "",
+      scope: "all",
+      offset: 0,
+    });
+    assert.deepEqual(
+      page.results.map((result) => result.entry.profile?.id),
+      selectedId === "all" ? [profile.id, workProfile.id] : [workProfile.id],
+    );
+  });
