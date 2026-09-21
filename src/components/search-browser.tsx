@@ -16,7 +16,8 @@ import { useMemo, useState } from "react";
 import { describeError, navigateTo } from "../browser/chrome";
 import { parseHistoryLimit } from "../browser/history";
 import { useBrowserSearch } from "../hooks/use-browser-search";
-import { parseQuery } from "../search/query";
+import { parseQuery, switchScope } from "../search/query";
+import { sourceShortcut } from "../search/source-shortcuts";
 import {
   sourceNames,
   type Scope,
@@ -39,6 +40,7 @@ export default function SearchBrowser({
   const preferences = getPreferenceValues<{
     historyLimit?: string;
     includeIncognito?: boolean;
+    sourceShortcuts?: string;
   }>();
   const options = useMemo(
     () => ({
@@ -65,6 +67,16 @@ export default function SearchBrowser({
   );
   if (state.error) warnings.push(state.error);
   const refresh = () => state.service.refresh();
+  const selectScope = (scope: Scope) => {
+    const next = switchScope(input, scope, fixedScope);
+    const nextQuery = parseQuery(next.input, next.scope, fixedScope);
+    if (nextQuery.text !== query.text || nextQuery.scope !== query.scope) {
+      state.cancel();
+      setSelectedId(undefined);
+    }
+    setInput(next.input);
+    setSelectedScope(next.scope);
+  };
 
   const actions = (result?: SearchResult) => {
     const resolve = () => {
@@ -120,6 +132,21 @@ export default function SearchBrowser({
               shortcut={{ modifiers: ["cmd"], key: "c" }}
               onAction={copy}
             />
+          </ActionPanel.Section>
+        )}
+        {fixedScope === "all" && (
+          <ActionPanel.Section title="切换搜索来源">
+            {(Object.keys(scopeNames) as Scope[]).map((scope) => (
+              <Action
+                key={scope}
+                title={`搜索${scopeNames[scope]}`}
+                icon={
+                  scope === query.scope ? Icon.Checkmark : Icon.MagnifyingGlass
+                }
+                shortcut={sourceShortcut(scope, preferences.sourceShortcuts)}
+                onAction={() => selectScope(scope)}
+              />
+            ))}
           </ActionPanel.Section>
         )}
         <ActionPanel.Section>
@@ -185,17 +212,8 @@ export default function SearchBrowser({
         fixedScope === "all" ? (
           <List.Dropdown
             tooltip="搜索来源"
-            value={selectedScope}
-            onChange={(value) => {
-              if (value === selectedScope) return;
-              if (
-                parseQuery(input, value as Scope, fixedScope).scope !==
-                query.scope
-              )
-                state.cancel();
-              setSelectedScope(value as Scope);
-              setSelectedId(undefined);
-            }}
+            value={query.scope}
+            onChange={(value) => selectScope(value as Scope)}
           >
             {Object.entries(scopeNames).map(([value, title]) => (
               <List.Dropdown.Item key={value} value={value} title={title} />

@@ -72,12 +72,14 @@ export class BrowserService {
       JSON.stringify(this.options) !== JSON.stringify(normalized) ||
       (profileId !== undefined && profileId !== this.profileId);
     this.options = normalized;
+    // 先保存选择意图，读取完成前的刷新也必须使用新配置。
+    if (profileId !== undefined) this.profileId = profileId;
     if (changed) {
       this.entries = { tab: [], bookmark: [], history: [] };
       this.states = emptyStates();
       this.changed(true);
     }
-    await this.load(profileId);
+    await this.load();
   }
 
   refresh() {
@@ -98,7 +100,7 @@ export class BrowserService {
     this.cache = undefined;
   }
 
-  private async load(requestedProfile?: string) {
+  private async load() {
     const generation = ++this.generation;
     const live = () => generation === this.generation;
     const options = this.options;
@@ -142,7 +144,7 @@ export class BrowserService {
         const found = await this.io.discoverProfiles();
         if (!live()) return;
         this.profiles = found.profiles;
-        const next = requestedProfile ?? this.profileId;
+        const next = this.profileId;
         this.profileId =
           next === "all" || found.profiles.some((p) => p.id === next)
             ? next
@@ -150,47 +152,52 @@ export class BrowserService {
         const selected = found.profiles.filter(
           (p) => this.profileId === "all" || p.id === this.profileId,
         );
-        for (const source of ["bookmark", "history"] as const) {
-          if (!wanted.includes(source)) continue;
-          const entries: BrowserEntry[] = [];
-          const warnings: string[] = [];
-          if (!selected.length)
-            warnings.push(
-              "未找到 Chrome 配置，请先运行 Google Chrome 后刷新。",
-            );
-          for (const profile of selected) {
-            if (!live()) return;
-            try {
-              if (source === "bookmark") {
-                const result = await this.io.readBookmarks(profile);
-                entries.push(...result.entries);
-                warnings.push(
-                  ...result.warnings.map(
-                    (message) => `${profile.name}：${message}`,
-                  ),
-                );
-              } else
-                entries.push(
-                  ...(await this.io.readHistory(profile, options.historyLimit)),
-                );
-            } catch (error) {
-              warnings.push(`${profile.name}：${describeError(error)}`);
+        await Promise.all(
+          (["bookmark", "history"] as const).map(async (source) => {
+            if (!wanted.includes(source)) return;
+            const entries: BrowserEntry[] = [];
+            const warnings: string[] = [];
+            if (!selected.length)
+              warnings.push(
+                "未找到 Chrome 配置，请先运行 Google Chrome 后刷新。",
+              );
+            for (const profile of selected) {
+              if (!live()) return;
+              try {
+                if (source === "bookmark") {
+                  const result = await this.io.readBookmarks(profile);
+                  entries.push(...result.entries);
+                  warnings.push(
+                    ...result.warnings.map(
+                      (message) => `${profile.name}：${message}`,
+                    ),
+                  );
+                } else
+                  entries.push(
+                    ...(await this.io.readHistory(
+                      profile,
+                      options.historyLimit,
+                    )),
+                  );
+              } catch (error) {
+                warnings.push(`${profile.name}：${describeError(error)}`);
+              }
             }
-          }
-          if (!live()) return;
-          if (source === "history")
-            entries.sort((a, b) => (b.visitedAt ?? 0) - (a.visitedAt ?? 0));
-          this.entries[source] =
-            source === "history"
-              ? entries.slice(0, options.historyLimit)
-              : entries;
-          this.states[source] = {
-            loading: false,
-            warnings,
-            count: this.entries[source].length,
-          };
-          this.changed(true);
-        }
+            if (!live()) return;
+            if (source === "history")
+              entries.sort((a, b) => (b.visitedAt ?? 0) - (a.visitedAt ?? 0));
+            this.entries[source] =
+              source === "history"
+                ? entries.slice(0, options.historyLimit)
+                : entries;
+            this.states[source] = {
+              loading: false,
+              warnings,
+              count: this.entries[source].length,
+            };
+            this.changed(true);
+          }),
+        );
       } catch (error) {
         if (!live()) return;
         for (const source of ["bookmark", "history"] as const) {
