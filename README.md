@@ -4,16 +4,24 @@
 
 **当前限制：行内彩色命中高亮尚未实现。** Clipboard History 使用 Raycast 内部 `HighlightRoot`，第三方 `List.Item` 没有相同接口。搜索仍由 `text-search-engine@1.5.3` 完成，并保留原文命中区间；`zhoubao` 能找到“周报”，但目前列表不会为这两个字着色。不添加「」等标记，也不使用独立浮窗或详情栏替代。
 
-## 开发与使用
+## 安装到 Raycast
 
-详细的本地安装、调试、权限排查与卸载步骤见 [贡献指南](CONTRIBUTING.md)。
-
-需要 macOS、Google Chrome、Raycast、Node.js 22.22.2 或更新版本。
+Blazwitcher Raycast 目前通过源码安装。需要 macOS、Google Chrome、Raycast，以及 Node.js 22.22.2 或更新版本；不需要全局安装 Raycast CLI。
 
 ```bash
+git clone https://github.com/cjinhuo/blazwitcher-raycast.git
+cd blazwitcher-raycast
 npm ci
 npm run dev
 ```
+
+终端出现 `ready - built extension successfully` 后，打开 Raycast，搜索并运行“搜索浏览器”。首次切换标签页时，macOS 可能询问是否允许 Raycast 控制 Google Chrome，请按提示授权。
+
+`npm run dev` 会把扩展导入 Raycast 并监听源码修改。导入完成后可按 `Ctrl+C` 停止监听；需要升级时，在仓库中执行 `git pull`、`npm ci`，再运行一次 `npm run dev`。详细的调试、权限排查与卸载步骤见 [贡献指南](CONTRIBUTING.md)。
+
+## 使用
+
+统一入口首次打开时会先展示 Chrome 标签页，再渐进加入历史和书签，与 Chrome 扩展的首屏顺序保持一致。
 
 | 命令         | 范围                       |
 | ------------ | -------------------------- |
