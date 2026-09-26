@@ -231,13 +231,22 @@ export class BrowserService {
     const token = ++this.searchToken;
     const scope =
       this.options.scope === "all" ? request.scope : this.options.scope;
+    // 原扩展先发布标签页首屏。首次空搜索也等待标签页首读，避免更快的
+    // 书签读取短暂占据首项；输入查询和已有数据刷新仍保持渐进展示。
+    const searchScope =
+      scope === "all" &&
+      !request.query.trim() &&
+      this.states.tab.loading &&
+      this.entries.tab.length === 0
+        ? "tab"
+        : scope;
     const key = JSON.stringify([this.version, scope, request.query]);
     const results =
       this.cache?.key === key
         ? this.cache.results
         : await this.index.search(
             request.query,
-            scope,
+            searchScope,
             () => token !== this.searchToken,
           );
     if (token !== this.searchToken || request.version !== this.version)
