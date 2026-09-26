@@ -41,14 +41,21 @@ export default function SearchBrowser({
     historyLimit?: string;
     includeIncognito?: boolean;
     sourceShortcuts?: string;
+    startupPreview?: boolean;
   }>();
   const options = useMemo(
     () => ({
       scope: fixedScope,
       historyLimit: parseHistoryLimit(preferences.historyLimit),
       includeIncognito: preferences.includeIncognito ?? false,
+      startupPreview: preferences.startupPreview ?? true,
     }),
-    [fixedScope, preferences.historyLimit, preferences.includeIncognito],
+    [
+      fixedScope,
+      preferences.historyLimit,
+      preferences.includeIncognito,
+      preferences.startupPreview,
+    ],
   );
   const [input, setInput] = useState("");
   const [selectedScope, setSelectedScope] = useState<Scope>(fixedScope);
@@ -56,6 +63,10 @@ export default function SearchBrowser({
   const query = parseQuery(input, selectedScope, fixedScope);
   const state = useBrowserSearch(options, query.text, query.scope);
   const { page, snapshot } = state;
+  const cached = Object.entries(snapshot?.states ?? {}).some(
+    ([source, state]) =>
+      state.cached && (query.scope === "all" || query.scope === source),
+  );
   const busy =
     state.searching ||
     Object.values(snapshot?.states ?? {}).some((source) => source.loading);
@@ -177,6 +188,17 @@ export default function SearchBrowser({
             </ActionPanel.Submenu>
           )}
           <Action
+            title="清除启动缓存"
+            icon={Icon.Trash}
+            onAction={async () => {
+              const cleared = state.service.clearPreviewCache();
+              await showToast({
+                style: cleared ? Toast.Style.Success : Toast.Style.Failure,
+                title: cleared ? "已清除启动缓存" : "清除启动缓存失败，请重试",
+              });
+            }}
+          />
+          <Action
             title="扩展设置"
             icon={Icon.Gear}
             onAction={openExtensionPreferences}
@@ -228,11 +250,17 @@ export default function SearchBrowser({
       }}
     >
       <List.Section
-        title={page ? `${page.total.toLocaleString()} 个结果` : "正在搜索…"}
+        title={
+          page
+            ? `${page.total.toLocaleString()} 个${cached ? "已加载" : ""}结果`
+            : "正在搜索…"
+        }
         subtitle={
-          fixedScope === "tab"
-            ? "Chrome 标签页"
-            : `历史上限 ${options.historyLimit.toLocaleString()}`
+          cached
+            ? "缓存预览 · 正在读取完整数据"
+            : fixedScope === "tab"
+              ? "Chrome 标签页"
+              : `历史上限 ${options.historyLimit.toLocaleString()}`
         }
       >
         {page?.results.map((result) => {
