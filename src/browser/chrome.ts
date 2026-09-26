@@ -63,6 +63,8 @@ export function describeError(error: unknown, application = "Raycast"): string {
     return "Chrome 当前未运行，请启动后刷新。";
   if (message.includes("TAB_MOVED_DURING_FOCUS"))
     return "标签位置刚刚发生变化，请重试。";
+  if (message.includes("TABS_CHANGED_DURING_READ"))
+    return "标签页正在变化，暂时无法读取稳定结果，请刷新重试。";
   if (message.includes("INVALID_TAB_ID")) return "标签标识无效，请刷新结果。";
   if (
     /EPERM|EACCES|authorization denied|unable to open database/i.test(message)

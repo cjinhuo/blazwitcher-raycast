@@ -51,6 +51,15 @@
   ],
   "preferences": [
     {
+      "name": "startupPreview",
+      "title": "启动预览缓存",
+      "label": "优先显示上次结果，再读取完整数据",
+      "description": "每个 Chrome 配置最多缓存 100 条书签和 100 条历史，有效期 5 分钟，仅存于本机；不缓存标签页或无痕数据。关闭后不再使用缓存。",
+      "type": "checkbox",
+      "default": true,
+      "required": false
+    },
+    {
       "name": "historyLimit",
       "title": "历史记录读取上限",
       "description": "按最近访问排序读取的条数，默认 20000；上限 100000。拼音搜索在这些记录中进行。",

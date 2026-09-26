@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Cache } from "@raycast/api";
+import { StartupPreviewCache } from "../browser/preview-cache";
 import { BrowserService } from "../browser/service";
 import type {
   BrowserOptions,
@@ -16,7 +18,17 @@ export function useBrowserSearch(
   const [profileId, setProfileId] = useState<string>();
   const [page, setPage] = useState<SearchPage>();
   const [error, setError] = useState<string>();
-  const service = useMemo(() => new BrowserService(setSnapshot), []);
+  const service = useMemo(
+    () =>
+      new BrowserService(
+        setSnapshot,
+        undefined,
+        new StartupPreviewCache(
+          new Cache({ namespace: "startup-preview-v1", capacity: 512 * 1024 }),
+        ),
+      ),
+    [],
+  );
   const sequence = useRef(0);
   const loadingMore = useRef<number | undefined>(undefined);
 

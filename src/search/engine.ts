@@ -2,7 +2,13 @@ import {
   extractBoundaryMapping,
   searchSentenceByBoundaryMapping,
 } from "text-search-engine";
-import type { BrowserEntry, Range, Scope, SearchResult } from "../types";
+import type {
+  BrowserEntry,
+  Range,
+  Scope,
+  SearchResult,
+  Source,
+} from "../types";
 import { normalizeRanges } from "./highlight";
 
 type Mapping = ReturnType<typeof extractBoundaryMapping>;
@@ -75,6 +81,24 @@ export class SearchIndex {
         letterMask: letterMask(lower),
       };
     });
+  }
+
+  replaceSource(source: Source, entries: BrowserEntry[]) {
+    const retained = this.rows.filter((row) => {
+      if (row.entry.source !== source) return true;
+      for (const prefix of ["title:", "all:"]) {
+        const key = prefix + row.entry.id;
+        const mapping = this.mappings.get(key);
+        if (mapping) {
+          this.mappingUnits -=
+            mapping.boundary.length + mapping.originalIndices.length;
+          this.mappings.delete(key);
+        }
+      }
+      return false;
+    });
+    // 其他来源保留已规范化文本和拼音映射，不因一批标签返回而重建历史。
+    this.rows = retained.concat(new SearchIndex(entries).rows);
   }
 
   private match(
