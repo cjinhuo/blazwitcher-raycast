@@ -169,6 +169,26 @@ OpenSpec CLI 不属于本项目 npm 依赖；普通本地安装和运行不需�
 
 卸载不会删除项目源码。之后重新安装，回到项目根目录执行 `npm run dev`；如果依赖已删除，则先执行 `npm ci`。不要通过修改 Raycast 私有数据库或应用安装包来注册、重置或移除扩展。
 
+## 提交到 Raycast Store
+
+发布前确认 `package.json` 的 `author` 是自己的 Raycast Store 用户名，并使用合法分类；依赖升级同步更新 npm 锁文件。
+
+```bash
+npm run check
+```
+
+检查包含官方 `ray lint` 的 manifest、图标和源码校验，以及项目类型检查、回归测试、全仓格式和分发构建。构建完成后还需要在 Raycast 中实际验证搜索、来源切换、复制、Chrome 跳转和权限失败时的提示。
+
+在 Raycast 的 Window Capture 中启用“Save to Metadata”，使用公开演示数据拍摄商店截图并保存到 `metadata/`；推荐至少 3 张 2000×1250 PNG。README 使用的其他媒体放在 `media/`，运行时图标放在 `assets/`。不要在截图中展示私人标题、地址或配置信息。
+
+新增或更新 `CHANGELOG.md`，版本标题使用 `## [变更标题] - {PR_MERGE_DATE}`。官方审核合并后会替换日期占位符。
+
+```bash
+npm run publish
+```
+
+发布命令会要求登录，并向 `raycast/extensions` 创建或更新 PR。PR 中说明拼音、首字母、中英文混合搜索与已有 Google Chrome 扩展的区别，并附演示录屏或截图；官方审核合并后才会上架。发布流程见 [官方文档](https://developers.raycast.com/basics/publish-an-extension)。
+
 ## 协作约定
 
 - 提交改动前阅读 [AGENTS.md](AGENTS.md) 与 [实施计划](docs/实施计划.md)，说明本次变更和验证范围。

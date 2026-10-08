@@ -2,9 +2,28 @@
 
 在 Raycast 窗口内搜索 Chrome 标签页、书签和历史记录。默认使用单栏列表，保留搜索框、来源筛选、结果数量、网站图标、标题、灰色网址、来源标签和底部操作栏；按 `⌘D` 可展开右侧详情。
 
-**当前限制：行内彩色命中高亮尚未实现。** Clipboard History 使用 Raycast 内部 `HighlightRoot`，第三方 `List.Item` 没有相同接口。搜索仍由 `text-search-engine@1.5.3` 完成，并保留原文命中区间；`zhoubao` 能找到“周报”，但目前列表不会为这两个字着色。不添加「」等标记，也不使用独立浮窗或详情栏替代。
+支持全拼、拼音首字母和中英文混合关键词，适合包含中文标题的浏览器资料：
 
-## 安装到 Raycast
+| 搜索词       | 可匹配的标题示例       |
+| ------------ | ---------------------- |
+| `zhoubao`    | 项目周报               |
+| `zb`         | 项目周报               |
+| `release zb` | Release 发布周报       |
+| `/t zhoubao` | 已打开标签中的项目周报 |
+| `/b zhoubao` | 书签中的项目周报       |
+| `/h zhoubao` | 历史记录中的项目周报   |
+
+**当前限制：搜索列表不显示行内彩色命中高亮。** 拼音仍可匹配中文标题；例如 `zhoubao` 能找到“周报”，但这两个字不会着色。
+
+## 使用前准备
+
+- 需要 macOS、Google Chrome 和 Raycast；当前仅支持 Google Chrome。
+- 首次读取或切换标签页时，允许 **Raycast 控制 Google Chrome**。若曾拒绝，在 macOS“系统设置 → 隐私与安全性 → 自动化”中检查 Raycast 对 Google Chrome 的权限。
+- Chrome 的书签、历史记录和图标缓存从本机配置读取，搜索不会上传浏览索引；详情正文的短期缓存仅在当前命令内存中保存。
+- 官方 [Raycast Browser Extension](https://www.raycast.com/browser-extension) 是可选增强，用于标签页正文预览和部分网站图标。未安装时仍可搜索和打开结果。
+- 启动预览缓存默认启用，每个 Chrome 配置最多保存 100 条书签和 100 条历史、有效期 5 分钟；可在扩展设置关闭，或在动作菜单选择“清除启动缓存”。无痕标签默认排除且不写入该缓存。
+
+## 源码安装与开发
 
 Blazwitcher Raycast 目前通过源码安装。需要 macOS、Google Chrome、Raycast，以及 Node.js 22.22.2 或更新版本；不需要全局安装 Raycast CLI。
 
