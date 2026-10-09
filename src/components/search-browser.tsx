@@ -1,10 +1,12 @@
 import {
   Action,
   ActionPanel,
+  BrowserExtension,
   Color,
   Icon,
   List,
   Toast,
+  environment,
   getPreferenceValues,
   showToast,
 } from "@raycast/api";
@@ -62,13 +64,20 @@ export default function SearchBrowser() {
   const [selectedScope, setSelectedScope] = useState<Scope>("all");
   const [selectedId, setSelectedId] = useState<string | null>();
   const [showDetail, setShowDetail] = useState(false);
+  // 不注册不可用能力的动作和快捷键，避免进入只有安装提示的详情栏。
+  const detailAvailable = environment.canAccess(BrowserExtension);
+  const detailVisible = detailAvailable && showDetail;
   const query = parseQuery(input, selectedScope);
   const state = useBrowserSearch(options, query.text, query.scope);
   const { page, snapshot } = state;
   const activeEntry =
     page?.results.find(({ entry }) => entry.id === selectedId)?.entry ??
     page?.results[0]?.entry;
-  const preview = usePagePreview(activeEntry, page?.version ?? -1, showDetail);
+  const preview = usePagePreview(
+    activeEntry,
+    page?.version ?? -1,
+    detailVisible,
+  );
   const favicons = useFavicons(page?.results, page?.version ?? -1);
   const cached = Object.entries(snapshot?.states ?? {}).some(
     ([source, state]) =>
@@ -113,20 +122,26 @@ export default function SearchBrowser() {
         shortcuts={shortcuts}
         scope={query.scope}
         selectScope={selectScope}
+        previewActions={
+          detailAvailable && (
+            <>
+              <Action
+                title={detailVisible ? "收起预览" : "展开预览"}
+                icon={Icon.Sidebar}
+                shortcut={raycastShortcut(shortcuts.bindings.toggleDetail)}
+                onAction={() => setShowDetail((value) => !value)}
+              />
+              {detailVisible && result?.entry.source === "tab" && (
+                <Action
+                  title="刷新预览"
+                  icon={Icon.ArrowClockwise}
+                  onAction={preview.refresh}
+                />
+              )}
+            </>
+          )
+        }
       >
-        <Action
-          title={showDetail ? "隐藏详情" : "显示详情"}
-          icon={Icon.Sidebar}
-          shortcut={raycastShortcut(shortcuts.bindings.toggleDetail)}
-          onAction={() => setShowDetail((value) => !value)}
-        />
-        {showDetail && result?.entry.source === "tab" && (
-          <Action
-            title="刷新预览"
-            icon={Icon.ArrowClockwise}
-            onAction={preview.refresh}
-          />
-        )}
         <ActionPanel.Submenu title="切换 Chrome 配置" icon={Icon.Person}>
           <Action
             title="全部配置"
@@ -164,7 +179,7 @@ export default function SearchBrowser() {
     : "正在搜索…";
   return (
     <List
-      isShowingDetail={showDetail}
+      isShowingDetail={detailVisible}
       filtering={false}
       isLoading={busy}
       searchText={input}
@@ -212,9 +227,9 @@ export default function SearchBrowser() {
               key={result.entry.id}
               entry={result.entry}
               favicon={favicons?.get(result.entry.id)}
-              showDetail={showDetail}
+              showDetail={detailVisible}
               detail={
-                showDetail && result.entry.id === activeId ? (
+                detailVisible && result.entry.id === activeId ? (
                   <ResultDetail
                     entry={result.entry}
                     preview={preview}

@@ -35,6 +35,7 @@ export function BrowserActions({
   shortcuts,
   scope,
   selectScope,
+  previewActions,
   children,
 }: {
   entry?: BrowserEntry;
@@ -43,6 +44,7 @@ export function BrowserActions({
   shortcuts: ReturnType<typeof useShortcuts>;
   scope: Scope;
   selectScope: (scope: Scope) => void;
+  previewActions?: ActionPanel.Section.Props["children"];
   children?: ActionPanel.Section.Props["children"];
 }) {
   const execute = async (kind: ResultActionKind) => {
@@ -79,6 +81,7 @@ export function BrowserActions({
               onAction={() => execute(action.kind)}
             />
           ))}
+          {previewActions}
         </ActionPanel.Section>
       )}
       <ActionPanel.Section title="切换搜索来源">
@@ -106,6 +109,7 @@ export function BrowserActions({
             }
           />
         )}
+        {!entry && previewActions}
         {children}
         <Action
           title="扩展设置"

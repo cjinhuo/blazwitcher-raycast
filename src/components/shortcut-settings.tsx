@@ -1,9 +1,11 @@
 import {
   Action,
   ActionPanel,
+  BrowserExtension,
   Form,
   Icon,
   Toast,
+  environment,
   showToast,
   useNavigation,
 } from "@raycast/api";
@@ -25,6 +27,7 @@ export function ShortcutSettings({
   error?: string;
   onSave: (value: ShortcutOverrides) => Promise<void>;
 }) {
+  const detailAvailable = environment.canAccess(BrowserExtension);
   const [values, setValues] = useState(() =>
     Object.fromEntries(
       Object.entries(effectiveShortcuts(overrides)).map(([id, value]) => [
@@ -100,7 +103,7 @@ export function ShortcutSettings({
     >
       <Form.Description
         title="设置说明"
-        text="输入 cmd+shift+1、ctrl+o、shift+enter 等组合；留空停用该动作的额外绑定。菜单动作始终保留。第一、第二个结果动作仍由 Raycast 提供 Enter / ⌘Enter，无法在此停用；自定义键仅作为额外绑定。"
+        text="输入 cmd+shift+1、ctrl+o、shift+enter 等组合；留空停用该动作的额外绑定。支持的菜单动作始终保留。第一、第二个结果动作仍由 Raycast 提供 Enter / ⌘Enter，无法在此停用；自定义键仅作为额外绑定。"
       />
       {error && <Form.Description title="配置状态" text={error} />}
       {errors.length > 0 && (
@@ -121,7 +124,11 @@ export function ShortcutSettings({
             text="以下动作可分别设置快捷键。"
           />
           {actionDefinitions
-            .filter((action) => action.group === group)
+            .filter(
+              (action) =>
+                action.group === group &&
+                (action.id !== "toggleDetail" || detailAvailable),
+            )
             .map((action) => (
               <Form.TextField
                 key={action.id}
