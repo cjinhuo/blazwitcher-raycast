@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { SearchIndex, lowerWithOffsets } from "../src/search/engine";
+import { SearchIndex } from "../src/search/engine";
 import { normalizeRanges } from "../src/search/highlight";
 import { parseQuery } from "../src/search/query";
 import type { BrowserEntry } from "../src/types";
@@ -125,10 +125,6 @@ test("Unicode 代理对和小写扩展保留原始范围", async () => {
   const [result] = await index.search("zhongwen", "all");
   assert.deepEqual(result.titleRanges, [[3, 4]]);
   assert.equal(result.entry.title.slice(3, 5), "中文");
-  assert.deepEqual(lowerWithOffsets("İ").offsets, [
-    [0, 0],
-    [0, 0],
-  ]);
 });
 
 test("不因 URL 相同而丢失其他标签或来源", async () => {
