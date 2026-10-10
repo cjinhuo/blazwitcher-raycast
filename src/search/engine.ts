@@ -1,26 +1,21 @@
 import {
+  createSearcher,
   extractBoundaryMapping,
-  searchSentenceByBoundaryMapping,
+  type Searcher,
 } from "text-search-engine";
-import type {
-  BrowserEntry,
-  Range,
-  Scope,
-  SearchResult,
-  Source,
-} from "../types";
+import type { BrowserEntry, Scope, SearchResult, Source } from "../types";
 import { normalizeRanges } from "./highlight";
 
-type Mapping = ReturnType<typeof extractBoundaryMapping>;
 interface IndexedEntry {
   entry: BrowserEntry;
   title: string;
   url: string;
-  sourceLength: number;
-  lower: string;
-  offsets?: Range[];
   letterMask: number;
 }
+
+type FieldScope = "title" | "all";
+type EntrySearcher = Searcher<IndexedEntry, "title" | "separator" | "url">;
+const MAX_CACHED_TEXT_LENGTH = 5000;
 
 const characterMasks = new Map<string, number>();
 function letterMask(source: string): number {
@@ -45,40 +40,21 @@ function letterMask(source: string): number {
   return mask;
 }
 
-/** 小写可能改变 UTF-16 长度，因此显式保留到显示字符串的映射。 */
-export function lowerWithOffsets(source: string) {
-  let lower = "";
-  let position = 0;
-  const offsets: Range[] = [];
-  for (const char of source) {
-    const transformed = char.toLocaleLowerCase();
-    lower += transformed;
-    for (let i = 0; i < transformed.length; i++)
-      offsets.push([position, position + char.length - 1]);
-    position += char.length;
-  }
-  return { lower, offsets };
-}
-
 export class SearchIndex {
   private rows: IndexedEntry[];
-  private mappings = new Map<string, Mapping>();
-  private mappingUnits = 0;
+  private searchers = new Map<
+    IndexedEntry,
+    Partial<Record<FieldScope, EntrySearcher>>
+  >();
+  private cachedTextLength = 0;
   constructor(entries: BrowserEntry[]) {
     this.rows = entries.map((entry) => {
       const title = entry.title || entry.url;
-      const source = `${title}\n${entry.url}`;
-      const lower = source.toLocaleLowerCase();
-      const expanded =
-        lower.length !== source.length ? lowerWithOffsets(source) : undefined;
       return {
         entry: entry.title ? entry : { ...entry, title },
         title,
         url: entry.url,
-        sourceLength: source.length,
-        lower: expanded?.lower ?? lower,
-        offsets: expanded?.offsets,
-        letterMask: letterMask(lower),
+        letterMask: letterMask(`${title}\n${entry.url}`.toLocaleLowerCase()),
       };
     });
   }
@@ -86,15 +62,11 @@ export class SearchIndex {
   replaceSource(source: Source, entries: BrowserEntry[]) {
     const retained = this.rows.filter((row) => {
       if (row.entry.source !== source) return true;
-      for (const prefix of ["title:", "all:"]) {
-        const key = prefix + row.entry.id;
-        const mapping = this.mappings.get(key);
-        if (mapping) {
-          this.mappingUnits -=
-            mapping.boundary.length + mapping.originalIndices.length;
-          this.mappings.delete(key);
-        }
-      }
+      const cached = this.searchers.get(row);
+      if (cached?.title) this.cachedTextLength -= row.title.length;
+      if (cached?.all)
+        this.cachedTextLength -= row.title.length + 1 + row.url.length;
+      this.searchers.delete(row);
       return false;
     });
     // 其他来源保留已规范化文本和拼音映射，不因一批标签返回而重建历史。
@@ -102,30 +74,34 @@ export class SearchIndex {
   }
 
   private match(
-    key: string,
-    source: string,
+    row: IndexedEntry,
+    scope: FieldScope,
     query: string,
     fallbackQuery: string,
   ) {
-    const direct = source.indexOf(query);
-    if (direct >= 0) return [[direct, direct + query.length - 1]] as Range[];
-    let mapping = this.mappings.get(key);
-    if (!mapping) {
-      mapping = extractBoundaryMapping(source);
-      // 标题与组合字段共用展开规模预算，避免长 URL 的边界对象累积。
-      const units = mapping.boundary.length + mapping.originalIndices.length;
-      if (this.mappingUnits + units <= 20000) {
-        this.mappings.set(key, mapping);
-        this.mappingUnits += units;
+    const cached = this.searchers.get(row);
+    let searcher = cached?.[scope];
+    if (!searcher) {
+      searcher = createSearcher([row], {
+        getFields: ({ title, url }) => ({
+          title,
+          separator: scope === "all" ? "\n" : "",
+          url: scope === "all" ? url : "",
+        }),
+        mergeSpaces: false,
+      });
+      // SDK 在实例内保留拼音映射；限制缓存文本总长，避免长 URL 无界累积。
+      const length =
+        row.title.length + (scope === "all" ? 1 + row.url.length : 0);
+      if (this.cachedTextLength + length <= MAX_CACHED_TEXT_LENGTH) {
+        this.searchers.set(row, { ...cached, [scope]: searcher });
+        this.cachedTextLength += length;
       }
     }
-    const ranges = searchSentenceByBoundaryMapping(mapping, query).hitRanges;
     // 原顺序失败时只重试一次，防止短词先占用长词；仍由原引擎保证位置不重复。
     return (
-      ranges ??
-      (fallbackQuery !== query
-        ? searchSentenceByBoundaryMapping(mapping, fallbackQuery).hitRanges
-        : undefined)
+      searcher.search(query)[0] ??
+      (fallbackQuery !== query ? searcher.search(fallbackQuery)[0] : undefined)
     );
   }
 
@@ -165,33 +141,19 @@ export class SearchIndex {
       }
       // 完整标题命中优先，网址的字面命中不能遮掉标题的拼音相关度。
       const lowerTitle = row.title.toLocaleLowerCase();
-      const hitRanges =
-        this.match(
-          `title:${row.entry.id}`,
-          lowerTitle,
-          normalized,
-          fallbackQuery,
-        ) ??
-        this.match(`all:${row.entry.id}`, row.lower, normalized, fallbackQuery);
-      if (!hitRanges) continue;
+      const hit =
+        this.match(row, "title", normalized, fallbackQuery) ??
+        this.match(row, "all", normalized, fallbackQuery);
+      if (!hit) continue;
       const ranges = normalizeRanges(
-        hitRanges.map(([a, b]): Range => [
-          row.offsets?.[a]?.[0] ?? a,
-          row.offsets?.[b]?.[1] ?? b,
-        ]),
-        row.sourceLength,
+        hit.hitRanges,
+        row.title.length + 1 + row.url.length,
       );
       const titleRanges = normalizeRanges(
-        ranges.map(([a, b]): Range => [a, Math.min(b, row.title.length - 1)]),
+        hit.fieldHitRanges.title,
         row.title.length,
       );
-      const urlStart = row.title.length + 1;
-      const urlRanges = normalizeRanges(
-        ranges
-          .filter(([, b]) => b >= urlStart)
-          .map(([a, b]): Range => [Math.max(0, a - urlStart), b - urlStart]),
-        row.url.length,
-      );
+      const urlRanges = normalizeRanges(hit.fieldHitRanges.url, row.url.length);
       const matched = ranges.reduce((sum, [a, b]) => sum + b - a + 1, 0);
       const span = ranges.at(-1)![1] - ranges[0][0] + 1;
       const titleOnly = titleRanges.length > 0 && urlRanges.length === 0;
