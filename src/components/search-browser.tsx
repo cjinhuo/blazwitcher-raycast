@@ -15,7 +15,7 @@ import { captureChromeContext } from "../browser/chrome";
 import { BrowserActions } from "./browser-actions";
 import { useShortcuts } from "../hooks/use-shortcuts";
 import type { CapturedContext } from "../actions";
-import { parseHistoryLimit } from "../browser/history";
+import { parseHistoryDays, parseHistoryLimit } from "../browser/history";
 import { useBrowserSearch } from "../hooks/use-browser-search";
 import { useFavicons } from "../hooks/use-favicons";
 import { usePagePreview } from "../hooks/use-page-preview";
@@ -24,6 +24,11 @@ import { BrowserResultItem } from "./browser-result-item";
 import { raycastShortcut } from "../shortcuts";
 import { parseQuery, switchScope } from "../search/query";
 import { createResultSections } from "../search/result-sections";
+import {
+  parseBookmarkDisplayCount,
+  parseHistoryDisplayCount,
+  parseTopSuggestionsCount,
+} from "../search/config";
 import {
   sourceNames,
   type Scope,
@@ -43,8 +48,13 @@ export default function SearchBrowser() {
   const preferences = getPreferenceValues<{
     historyLimit?: string;
     includeIncognito?: boolean;
-    sourceShortcuts?: string;
     startupPreview?: boolean;
+    searchStrategy?: string;
+    historyDays?: string;
+    historyDisplayCount?: string;
+    bookmarkDisplayCount?: string;
+    topSuggestionsCount?: string;
+    enableConsecutiveSearch?: boolean;
   }>();
   const options = useMemo(
     () => ({
@@ -52,14 +62,35 @@ export default function SearchBrowser() {
       historyLimit: parseHistoryLimit(preferences.historyLimit),
       includeIncognito: preferences.includeIncognito ?? false,
       startupPreview: preferences.startupPreview ?? true,
+      searchStrategy:
+        preferences.searchStrategy === "full-url"
+          ? ("full-url" as const)
+          : ("chrome" as const),
+      historyDays: parseHistoryDays(preferences.historyDays),
+      historyDisplayCount: parseHistoryDisplayCount(
+        preferences.historyDisplayCount,
+      ),
+      bookmarkDisplayCount: parseBookmarkDisplayCount(
+        preferences.bookmarkDisplayCount,
+      ),
+      topSuggestionsCount: parseTopSuggestionsCount(
+        preferences.topSuggestionsCount,
+      ),
+      enableConsecutiveSearch: preferences.enableConsecutiveSearch ?? false,
     }),
     [
       preferences.historyLimit,
       preferences.includeIncognito,
       preferences.startupPreview,
+      preferences.searchStrategy,
+      preferences.historyDays,
+      preferences.historyDisplayCount,
+      preferences.bookmarkDisplayCount,
+      preferences.topSuggestionsCount,
+      preferences.enableConsecutiveSearch,
     ],
   );
-  const shortcuts = useShortcuts(preferences.sourceShortcuts);
+  const shortcuts = useShortcuts();
   const [input, setInput] = useState("");
   const [selectedScope, setSelectedScope] = useState<Scope>("all");
   const [selectedId, setSelectedId] = useState<string | null>();
@@ -173,7 +204,13 @@ export default function SearchBrowser() {
     );
   };
   const activeId = activeEntry?.id;
-  const sections = page ? createResultSections(page.results, query.text) : [];
+  const sections = page
+    ? createResultSections(
+        page.results,
+        query.text,
+        options.topSuggestionsCount,
+      )
+    : [];
   const resultSummary = page
     ? `${page.total.toLocaleString()} 个结果${cached ? " · 缓存预览" : ""}`
     : "正在搜索…";

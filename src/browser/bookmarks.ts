@@ -31,7 +31,7 @@ export function parseBookmarks(
       entries.push({
         id: `bookmark:${profile.id}:${file}:${node.guid || node.id || entries.length}`,
         source: "bookmark",
-        title: node.name || node.url,
+        title: node.name || "",
         url: node.url,
         profile,
         folder: folders.join(" / "),

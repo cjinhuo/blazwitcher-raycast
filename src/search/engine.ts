@@ -1,108 +1,125 @@
 import {
   createSearcher,
-  extractBoundaryMapping,
+  isStrictnessSatisfied,
   type Searcher,
 } from "text-search-engine";
 import type { BrowserEntry, Scope, SearchResult, Source } from "../types";
+import { FullUrlSearchIndex } from "./full-url-engine";
 import { normalizeRanges } from "./highlight";
+import { letterMask } from "./letter-mask";
+import { normalizeSearchParameters, type SearchParameters } from "./config";
 
+export type SearchStrategy = "chrome" | "full-url";
 interface IndexedEntry {
   entry: BrowserEntry;
+  originalTitle: string;
+  originalUrl: string;
   title: string;
-  url: string;
+  host: string;
+  titleOffset: number;
+  hostOffset: number;
   letterMask: number;
 }
-
-type FieldScope = "title" | "all";
-type EntrySearcher = Searcher<IndexedEntry, "title" | "separator" | "url">;
+interface IndexedResult {
+  row: IndexedEntry;
+  result: SearchResult;
+}
 const MAX_CACHED_TEXT_LENGTH = 5000;
 
-const characterMasks = new Map<string, number>();
-function letterMask(source: string): number {
-  let mask = 0;
-  for (const char of source) {
-    const code = char.charCodeAt(0);
-    if (code >= 97 && code <= 122) mask |= 1 << (code - 97);
-    else if (code > 127) {
-      let cached = characterMasks.get(char);
-      if (cached === undefined) {
-        cached = 0;
-        // 仅复用引擎的拼音展开，不引入第二套字典或匹配规则。
-        for (const letter of extractBoundaryMapping(char).pinyinString) {
-          const code = letter.charCodeAt(0);
-          if (code >= 97 && code <= 122) cached |= 1 << (code - 97);
-        }
-        characterMasks.set(char, cached);
-      }
-      mask |= cached;
-    }
-  }
-  return mask;
-}
-
+/** 默认复用 Chrome 的标题与 host 语义，显式增强模式保留原完整网址策略。 */
 export class SearchIndex {
-  private rows: IndexedEntry[];
+  private rows: IndexedEntry[] = [];
   private searchers = new Map<
     IndexedEntry,
-    Partial<Record<FieldScope, EntrySearcher>>
+    Searcher<IndexedEntry, "title" | "host">
   >();
   private cachedTextLength = 0;
-  constructor(entries: BrowserEntry[]) {
-    this.rows = entries.map((entry) => {
-      const title = entry.title || entry.url;
+  private enhanced?: FullUrlSearchIndex;
+  private options: SearchParameters;
+
+  constructor(
+    entries: BrowserEntry[],
+    strategy: SearchStrategy = "chrome",
+    options?: Partial<SearchParameters>,
+  ) {
+    this.options = normalizeSearchParameters(options);
+    if (strategy === "full-url") {
+      this.enhanced = new FullUrlSearchIndex(entries, options);
+      return;
+    }
+    this.rows = entries.flatMap((entry) => {
+      const originalTitle = entry.title;
+      const originalUrl = entry.url;
+      if (
+        entry.source === "tab" &&
+        (!originalTitle || !originalUrl || originalUrl.startsWith("chrome://"))
+      )
+        return [];
+      let host: string;
+      try {
+        host = new URL(originalUrl).host;
+      } catch {
+        return [];
+      }
+      const authorityStart = originalUrl.indexOf("//") + 2;
+      const authority = originalUrl.slice(authorityStart).split(/[/?#]/, 1)[0];
+      let hostOffset = authorityStart + authority.lastIndexOf("@") + 1;
+      if (
+        originalUrl
+          .slice(hostOffset, hostOffset + host.length)
+          .toLowerCase() !== host.toLowerCase()
+      )
+        hostOffset = -1;
+      const title = originalTitle.trim();
       return {
-        entry: entry.title ? entry : { ...entry, title },
+        entry,
+        originalTitle,
+        originalUrl,
         title,
-        url: entry.url,
-        letterMask: letterMask(`${title}\n${entry.url}`.toLocaleLowerCase()),
+        host,
+        titleOffset: originalTitle.length - originalTitle.trimStart().length,
+        hostOffset,
+        letterMask: letterMask(`${title}${host}`.toLocaleLowerCase()),
       };
     });
   }
 
   replaceSource(source: Source, entries: BrowserEntry[]) {
+    if (this.enhanced) {
+      this.enhanced.replaceSource(source, entries);
+      return;
+    }
     const retained = this.rows.filter((row) => {
       if (row.entry.source !== source) return true;
-      const cached = this.searchers.get(row);
-      if (cached?.title) this.cachedTextLength -= row.title.length;
-      if (cached?.all)
-        this.cachedTextLength -= row.title.length + 1 + row.url.length;
-      this.searchers.delete(row);
+      if (this.searchers.delete(row))
+        this.cachedTextLength -= row.title.length + row.host.length;
       return false;
     });
-    // 其他来源保留已规范化文本和拼音映射，不因一批标签返回而重建历史。
-    this.rows = retained.concat(new SearchIndex(entries).rows);
+    this.rows = retained.concat(
+      new SearchIndex(entries, "chrome", this.options).rows,
+    );
+    // Chrome 后台固定发送 tab → history → bookmark，不依赖异步读取完成顺序。
+    const priority = { tab: 0, history: 1, bookmark: 2 };
+    this.rows.sort(
+      (a, b) => priority[a.entry.source] - priority[b.entry.source],
+    );
   }
 
-  private match(
-    row: IndexedEntry,
-    scope: FieldScope,
-    query: string,
-    fallbackQuery: string,
-  ) {
-    const cached = this.searchers.get(row);
-    let searcher = cached?.[scope];
+  private match(row: IndexedEntry, query: string) {
+    let searcher = this.searchers.get(row);
     if (!searcher) {
       searcher = createSearcher([row], {
-        getFields: ({ title, url }) => ({
-          title,
-          separator: scope === "all" ? "\n" : "",
-          url: scope === "all" ? url : "",
-        }),
-        mergeSpaces: false,
+        getFields: ({ title, host }) => ({ title, host }),
+        mergeSpaces: true,
+        isCharConsecutive: this.options.enableConsecutiveSearch,
       });
-      // SDK 在实例内保留拼音映射；限制缓存文本总长，避免长 URL 无界累积。
-      const length =
-        row.title.length + (scope === "all" ? 1 + row.url.length : 0);
+      const length = row.title.length + row.host.length;
       if (this.cachedTextLength + length <= MAX_CACHED_TEXT_LENGTH) {
-        this.searchers.set(row, { ...cached, [scope]: searcher });
+        this.searchers.set(row, searcher);
         this.cachedTextLength += length;
       }
     }
-    // 原顺序失败时只重试一次，防止短词先占用长词；仍由原引擎保证位置不重复。
-    return (
-      searcher.search(query)[0] ??
-      (fallbackQuery !== query ? searcher.search(fallbackQuery)[0] : undefined)
-    );
+    return searcher.search(query)[0];
   }
 
   async search(
@@ -110,18 +127,15 @@ export class SearchIndex {
     scope: Scope,
     cancelled: () => boolean = () => false,
   ): Promise<SearchResult[]> {
-    const normalized = query.trim().toLocaleLowerCase();
-    const fallbackQuery = normalized
-      .split(/\s+/)
-      .sort((a, b) => b.length - a.length)
-      .join(" ");
-    // 只用于排除必定不匹配的记录，实际匹配与命中范围仍由引擎计算。
+    if (this.enhanced) return this.enhanced.search(query, scope, cancelled);
+    const trimmedQuery = query.trim();
+    const normalized = trimmedQuery.toLocaleLowerCase();
     let requiredLetters = 0;
     for (const char of normalized) {
       const code = char.charCodeAt(0);
       if (code >= 97 && code <= 122) requiredLetters |= 1 << (code - 97);
     }
-    const results: SearchResult[] = [];
+    const results: IndexedResult[] = [];
     for (let i = 0; i < this.rows.length; i++) {
       if (i % 250 === 0) {
         await new Promise<void>((resolve) => setImmediate(resolve));
@@ -132,48 +146,93 @@ export class SearchIndex {
       if ((row.letterMask & requiredLetters) !== requiredLetters) continue;
       if (!normalized) {
         results.push({
-          entry: row.entry,
-          titleRanges: [],
-          urlRanges: [],
-          score: row.entry.active ? 1 : 0,
+          row,
+          result: {
+            entry: row.entry,
+            titleRanges: [],
+            urlRanges: [],
+            score: 0,
+          },
         });
         continue;
       }
-      // 完整标题命中优先，网址的字面命中不能遮掉标题的拼音相关度。
-      const lowerTitle = row.title.toLocaleLowerCase();
-      const hit =
-        this.match(row, "title", normalized, fallbackQuery) ??
-        this.match(row, "all", normalized, fallbackQuery);
-      if (!hit) continue;
-      const ranges = normalizeRanges(
-        hit.hitRanges,
-        row.title.length + 1 + row.url.length,
-      );
+      const hit = this.match(row, normalized);
+      // 与 Chrome createListSearcher 一样，合并空格后再检查严格度。
+      if (!hit || !isStrictnessSatisfied(0.6, trimmedQuery, hit.hitRanges))
+        continue;
       const titleRanges = normalizeRanges(
         hit.fieldHitRanges.title,
         row.title.length,
-      );
-      const urlRanges = normalizeRanges(hit.fieldHitRanges.url, row.url.length);
-      const matched = ranges.reduce((sum, [a, b]) => sum + b - a + 1, 0);
-      const span = ranges.at(-1)![1] - ranges[0][0] + 1;
-      const titleOnly = titleRanges.length > 0 && urlRanges.length === 0;
-      const score =
-        (lowerTitle === normalized
-          ? 1000
-          : lowerTitle.startsWith(normalized)
-            ? 500
-            : 0) +
-        (titleOnly ? 200 : titleRanges.length ? 100 : 0) +
-        (50 * matched) / span -
-        ranges.length;
-      results.push({ entry: row.entry, titleRanges, urlRanges, score });
+      ).map(([start, end]): [number, number] => [
+        start + row.titleOffset,
+        end + row.titleOffset,
+      ]);
+      const urlRanges =
+        row.hostOffset < 0
+          ? []
+          : normalizeRanges(hit.fieldHitRanges.host, row.host.length).map(
+              ([start, end]): [number, number] => [
+                start + row.hostOffset,
+                end + row.hostOffset,
+              ],
+            );
+      results.push({
+        row,
+        result: {
+          entry: row.entry,
+          titleRanges,
+          urlRanges,
+          score: -hit.hitRanges.length,
+        },
+      });
     }
-    const priority = { tab: 0, bookmark: 1, history: 2 };
-    return results.sort(
-      (a, b) =>
-        b.score - a.score ||
-        priority[a.entry.source] - priority[b.entry.source] ||
-        (b.entry.visitedAt ?? 0) - (a.entry.visitedAt ?? 0),
-    );
+    return orderChromeResults(results, this.options);
   }
+}
+
+/** 命中段数负责相关度；来源内时间排序和最终全局排序均保持稳定。 */
+function orderChromeResults(
+  matches: IndexedResult[],
+  options: SearchParameters,
+): SearchResult[] {
+  const tabs = matches.filter(({ row }) => row.entry.source === "tab");
+  const seen = new Set<string>();
+  for (const { row } of tabs) {
+    seen.add(row.originalTitle);
+    seen.add(row.originalUrl);
+  }
+  const histories: IndexedResult[] = [];
+  const bookmarks: IndexedResult[] = [];
+  for (const match of matches) {
+    const { row } = match;
+    if (row.entry.source === "tab") continue;
+    if (seen.has(row.originalTitle) || seen.has(row.originalUrl)) continue;
+    seen.add(row.originalTitle);
+    seen.add(row.originalUrl);
+    (row.entry.source === "history" ? histories : bookmarks).push(match);
+  }
+  const segments = (a: IndexedResult, b: IndexedResult) =>
+    b.result.score - a.result.score;
+  return [
+    ...tabs
+      .sort((a, b) => {
+        const first = a.row.entry.lastAccessed;
+        const second = b.row.entry.lastAccessed;
+        // JXA 没有最近访问时间，不能伪造；缺失时保留采集顺序。
+        return first === undefined || second === undefined ? 0 : second - first;
+      })
+      .sort(segments)
+      .sort(
+        (a, b) => Number(!!b.row.entry.active) - Number(!!a.row.entry.active),
+      ),
+    ...histories
+      .sort(
+        (a, b) => (b.row.entry.visitedAt ?? 0) - (a.row.entry.visitedAt ?? 0),
+      )
+      .sort(segments)
+      .slice(0, options.historyDisplayCount),
+    ...bookmarks.sort(segments).slice(0, options.bookmarkDisplayCount),
+  ]
+    .sort(segments)
+    .map(({ result }) => result);
 }

@@ -128,7 +128,10 @@ test("书签失败不阻止历史完成，全部配置仍按访问时间应用�
         visitedAt: selected.id === profile.id ? n : n + 1,
       })),
   });
-  await service.configure({ ...defaultBrowserOptions, historyLimit: 2 }, "all");
+  await service.configure(
+    { ...defaultBrowserOptions, historyLimit: 2, searchStrategy: "full-url" },
+    "all",
+  );
   const snapshot = service.snapshot();
   assert.equal(snapshot.states.bookmark.loading, false);
   assert.equal(snapshot.states.bookmark.warnings.length, 2);

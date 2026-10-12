@@ -1,4 +1,10 @@
 import type { Profile, Scope, SearchResult, Source } from "../types";
+import { parseHistoryDays, parseHistoryLimit } from "./history";
+import {
+  defaultSearchParameters,
+  normalizeSearchParameters,
+  type SearchParameters,
+} from "../search/config";
 export interface SourceState {
   loading: boolean;
   warnings: string[];
@@ -30,18 +36,23 @@ export interface ResultRef {
   version: number;
   requestId: number;
 }
-export interface BrowserOptions {
+export interface BrowserOptions extends Partial<SearchParameters> {
   scope: Scope;
   historyLimit: number;
   includeIncognito: boolean;
   startupPreview: boolean;
+  searchStrategy?: "chrome" | "full-url";
+  historyDays?: number;
 }
 
 export const defaultBrowserOptions: BrowserOptions = {
+  ...defaultSearchParameters,
   scope: "all",
-  historyLimit: 20000,
+  historyLimit: 1000,
   includeIncognito: false,
   startupPreview: true,
+  searchStrategy: "chrome",
+  historyDays: 14,
 };
 
 export function isScope(value: unknown): value is Scope {
@@ -55,13 +66,14 @@ export function normalizeBrowserOptions(
   value: Partial<BrowserOptions>,
 ): BrowserOptions {
   if (!isScope(value.scope)) throw new Error("无效的搜索来源。");
-  const limit = Number(value.historyLimit);
   return {
+    ...normalizeSearchParameters(value),
     scope: value.scope,
-    historyLimit:
-      Number.isSafeInteger(limit) && limit > 0
-        ? Math.min(limit, 100000)
-        : 20000,
+    historyLimit: parseHistoryLimit(
+      value.historyLimit === undefined ? undefined : String(value.historyLimit),
+    ),
+    historyDays: parseHistoryDays(value.historyDays),
+    searchStrategy: value.searchStrategy === "full-url" ? "full-url" : "chrome",
     includeIncognito: value.includeIncognito === true,
     startupPreview: value.startupPreview !== false,
   };

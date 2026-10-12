@@ -10,7 +10,10 @@ test("标题的小写展开不会改变网址中希腊词尾的大小写匹配",
     title: "İ",
     url: "https://example.com/ΟΣ",
   };
-  const results = await new SearchIndex([entry]).search("ος", "tab");
+  const results = await new SearchIndex([entry], "full-url").search(
+    "ος",
+    "tab",
+  );
   assert.equal(results.length, 1);
   assert.deepEqual(results[0].titleRanges, []);
   assert.deepEqual(results[0].urlRanges, [[20, 21]]);
@@ -24,7 +27,7 @@ test("完整网址的路径、查询参数和片段都参与搜索", async () =>
     title: "浏览器设置",
     url: "https://example.com/deep/path?q=value#section",
   };
-  const [result] = await new SearchIndex([entry]).search(
+  const [result] = await new SearchIndex([entry], "full-url").search(
     "deep value section",
     "bookmark",
   );
@@ -48,7 +51,10 @@ test("两个字段含小写展开字符时仍返回各自原文范围", async ()
     title: "😀İ中文文档",
     url: "https://example.com/İ目录/path?q=value#section",
   };
-  const [result] = await new SearchIndex([entry]).search("zw path", "all");
+  const [result] = await new SearchIndex([entry], "full-url").search(
+    "zw path",
+    "all",
+  );
   assert.ok(result);
   assert.deepEqual(result.titleRanges, [[3, 4]]);
   assert.deepEqual(result.urlRanges, [[24, 27]]);
@@ -63,7 +69,10 @@ test("跨字段查询保留完整 emoji 的两个 UTF-16 单元", async () => {
     title: "😀İ中文文档",
     url: "https://example.com",
   };
-  const [result] = await new SearchIndex([entry]).search("😀 example", "all");
+  const [result] = await new SearchIndex([entry], "full-url").search(
+    "😀 example",
+    "all",
+  );
   assert.ok(result);
   assert.deepEqual(result.titleRanges, [[0, 1]]);
   assert.deepEqual(result.urlRanges, [[8, 14]]);
@@ -77,7 +86,10 @@ test("多字段匹配保留标题与网址之间换行的紧凑度评分", async
     title: "文档a",
     url: "https://example.com",
   };
-  const [result] = await new SearchIndex([entry]).search("ahttps", "all");
+  const [result] = await new SearchIndex([entry], "full-url").search(
+    "ahttps",
+    "all",
+  );
   assert.ok(result);
   assert.deepEqual(result.titleRanges, [[2, 2]]);
   assert.deepEqual(result.urlRanges, [[0, 4]]);
@@ -86,14 +98,17 @@ test("多字段匹配保留标题与网址之间换行的紧凑度评分", async
 });
 
 test("热查询返回独立范围，修改旧结果不会污染后续查询", async () => {
-  const index = new SearchIndex([
-    {
-      id: "tab:range-copy",
-      source: "tab",
-      title: "中文文档",
-      url: "https://example.com",
-    },
-  ]);
+  const index = new SearchIndex(
+    [
+      {
+        id: "tab:range-copy",
+        source: "tab",
+        title: "中文文档",
+        url: "https://example.com",
+      },
+    ],
+    "full-url",
+  );
   const [first] = await index.search("zw example", "all");
   const [second] = await index.search("zw example", "all");
   assert.notEqual(first.titleRanges, second.titleRanges);
@@ -121,7 +136,7 @@ test("热查询复用已提取的字段文本，不重新读取原条目", async
       return "https://example.com";
     },
   };
-  const index = new SearchIndex([entry]);
+  const index = new SearchIndex([entry], "full-url");
   fieldReads = 0;
   for (const query of ["zw example", "zhongwen", "zw example"]) {
     const [result] = await index.search(query, "history");
@@ -153,7 +168,7 @@ test("替换来源后移除旧字段，保留其他来源的热查询结果", as
       visitedAt: 100,
     },
   ];
-  const index = new SearchIndex([tab, ...retained]);
+  const index = new SearchIndex([tab, ...retained], "full-url");
   const before = await index.search("zw", "all");
   assert.equal((await index.search("old-tab", "tab")).length, 1);
   const updated = {

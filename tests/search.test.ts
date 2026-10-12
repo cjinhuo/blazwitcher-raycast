@@ -34,7 +34,10 @@ test("搜索覆盖初始显示页以外的候选", async () => {
     title: index === 1000 ? "最后一条中文目标" : `普通记录 ${index}`,
     url: `https://example.com/${index}`,
   }));
-  const results = await new SearchIndex(items).search("zuihou", "history");
+  const results = await new SearchIndex(items, "full-url").search(
+    "zuihou",
+    "history",
+  );
   assert.equal(results.length, 1);
   assert.equal(results[0].entry.id, "history:1000");
   assert.deepEqual(results[0].titleRanges, [[0, 1]]);
@@ -46,7 +49,7 @@ test("计算途中取消旧查询，不返回已经积累的旧结果", async ()
     id: `tab:${index}`,
   }));
   let batches = 0;
-  const results = await new SearchIndex(items).search(
+  const results = await new SearchIndex(items, "full-url").search(
     "zw",
     "all",
     () => ++batches > 1,
@@ -84,7 +87,10 @@ test("明确匹配优先于来源，相关度相同时标签优先、历史按�
       url: "https://example.com/exact",
     },
   ];
-  const results = await new SearchIndex(items).search("github", "all");
+  const results = await new SearchIndex(items, "full-url").search(
+    "github",
+    "all",
+  );
   assert.deepEqual(
     results.map((result) => result.entry.id),
     ["tab:exact", "history:new", "history:old", "tab:fuzzy"],
@@ -93,14 +99,17 @@ test("明确匹配优先于来源，相关度相同时标签优先、历史按�
 
 for (const query of ["中文", "zhongwen", "zw"])
   test(`中文、全拼和首字母：${query}`, async () => {
-    const results = await new SearchIndex(entries).search(query, "all");
+    const results = await new SearchIndex(entries, "full-url").search(
+      query,
+      "all",
+    );
     const hit = results.find((r) => r.entry.id === "tab:1");
     assert.deepEqual(hit?.titleRanges, [[0, 1]]);
     assert.deepEqual(hit?.urlRanges, []);
   });
 
 test("标题与 URL 跨字段分词，保持字段范围", async () => {
-  const [result] = await new SearchIndex(entries).search(
+  const [result] = await new SearchIndex(entries, "full-url").search(
     "jk monitor",
     "bookmark",
   );
@@ -113,7 +122,10 @@ test("标题与 URL 跨字段分词，保持字段范围", async () => {
 });
 
 test("中英文拼音混合及大小写", async () => {
-  const [result] = await new SearchIndex(entries).search("NODEzw", "history");
+  const [result] = await new SearchIndex(entries, "full-url").search(
+    "NODEzw",
+    "history",
+  );
   assert.deepEqual(result.titleRanges, [
     [0, 3],
     [8, 9],
@@ -121,18 +133,24 @@ test("中英文拼音混合及大小写", async () => {
 });
 
 test("Unicode 代理对和小写扩展保留原始范围", async () => {
-  const index = new SearchIndex([{ ...entries[0], title: "😀İ中文文档" }]);
+  const index = new SearchIndex(
+    [{ ...entries[0], title: "😀İ中文文档" }],
+    "full-url",
+  );
   const [result] = await index.search("zhongwen", "all");
   assert.deepEqual(result.titleRanges, [[3, 4]]);
   assert.equal(result.entry.title.slice(3, 5), "中文");
 });
 
 test("不因 URL 相同而丢失其他标签或来源", async () => {
-  const result = await new SearchIndex([
-    entries[0],
-    { ...entries[0], id: "tab:2" },
-    { ...entries[0], id: "bookmark:2", source: "bookmark" },
-  ]).search("zw", "all");
+  const result = await new SearchIndex(
+    [
+      entries[0],
+      { ...entries[0], id: "tab:2" },
+      { ...entries[0], id: "bookmark:2", source: "bookmark" },
+    ],
+    "full-url",
+  ).search("zw", "all");
   assert.equal(result.length, 3);
   assert.deepEqual(
     result.map((r) => r.entry.id),
@@ -141,7 +159,7 @@ test("不因 URL 相同而丢失其他标签或来源", async () => {
 });
 
 test("取消旧查询且空查询保留全部候选", async () => {
-  const index = new SearchIndex(entries);
+  const index = new SearchIndex(entries, "full-url");
   assert.deepEqual(await index.search("zw", "all", () => true), []);
   assert.equal((await index.search("", "all")).length, 3);
   assert.deepEqual(await index.search("不存在的标题abcdef", "all"), []);

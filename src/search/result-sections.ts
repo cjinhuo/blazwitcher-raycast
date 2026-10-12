@@ -6,7 +6,6 @@ export interface ResultSection {
   results: SearchResult[];
 }
 
-const topSuggestionCount = 2;
 const sourceSections: Array<{
   key: ResultSection["key"];
   source: Source;
@@ -20,11 +19,12 @@ const sourceSections: Array<{
 export function createResultSections(
   results: SearchResult[],
   query: string,
+  topSuggestionsCount = 2,
 ): ResultSection[] {
   const sections: ResultSection[] = [];
   let remaining = results;
   if (query.trim() && results.length) {
-    const suggestions = results.slice(0, topSuggestionCount);
+    const suggestions = results.slice(0, topSuggestionsCount);
     sections.push({
       key: "suggestions",
       title: "最优建议",

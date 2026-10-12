@@ -91,24 +91,38 @@ test("等待捕获期间结果失效时拒绝操作", async () => {
   assert.deepEqual(calls, []);
 });
 
-test("快捷键迁移一次，保存覆盖值后不再使用旧偏好", () => {
-  const migrated = loadShortcutConfig(undefined, "ctrl-shift");
-  assert.equal(migrated.needsSave, true);
-  const loaded = loadShortcutConfig(
-    serializeShortcuts(migrated.overrides),
-    "none",
-  );
-  assert.equal(loaded.needsSave, false);
-  assert.equal(
-    effectiveShortcuts(loaded.overrides)["source.tab"],
-    "ctrl+shift+1",
-  );
-  assert.equal(
-    effectiveShortcuts(loadShortcutConfig(undefined, "none").overrides)[
-      "source.tab"
-    ],
-    null,
-  );
+test("删除初始预设后保留已迁移的控制组合与停用配置", () => {
+  for (const key of ["ctrl+shift+1", null]) {
+    const stored = JSON.stringify({
+      version: 1,
+      overrides: { "source.tab": key, copy: "cmd+opt+c" },
+    });
+    const loaded = loadShortcutConfig(stored);
+    assert.equal(loaded.error, undefined);
+    assert.equal(loaded.needsSave, false);
+    const bindings = effectiveShortcuts(loaded.overrides);
+    assert.equal(bindings["source.tab"], key);
+    assert.equal(bindings.copy, "cmd+opt+c");
+  }
+});
+
+test("首次初始化使用当前默认，残留旧预设不能关闭或改绑来源动作", () => {
+  for (const stalePreference of ["ctrl-shift", "none"]) {
+    const initial = Reflect.apply(loadShortcutConfig, undefined, [
+      undefined,
+      stalePreference,
+    ]);
+    assert.equal(initial.needsSave, true);
+    assert.equal(initial.error, undefined);
+    assert.deepEqual(initial.overrides, {});
+    assert.equal(
+      effectiveShortcuts(initial.overrides)["source.tab"],
+      "cmd+shift+1",
+    );
+    const reopened = loadShortcutConfig(serializeShortcuts(initial.overrides));
+    assert.equal(reopened.needsSave, false);
+    assert.deepEqual(reopened.overrides, initial.overrides);
+  }
 });
 
 test("新增详情快捷键不会覆盖已保存的合法 cmd+d 绑定", () => {
@@ -131,13 +145,13 @@ test("同来源与通用动作不能冲突，不同来源的专属动作可复�
     assert.ok(validateShortcuts({ copy: shortcut }).length);
 });
 
-test("配置损坏时提示修复，恢复默认不再迁移旧偏好", () => {
+test("配置损坏时提示修复，恢复默认使用当前默认绑定", () => {
   assert.ok(loadShortcutConfig("invalid").error);
   assert.ok(loadShortcutConfig('{"version":1,"overrides":{"copy":42}}').error);
   assert.ok(
     loadShortcutConfig('{"version":1,"overrides":{"unknown":"cmd+r"}}').error,
   );
-  const defaults = loadShortcutConfig(serializeShortcuts({}), "none");
+  const defaults = loadShortcutConfig(serializeShortcuts({}));
   assert.equal(defaults.error, undefined);
   assert.equal(
     effectiveShortcuts(defaults.overrides)["source.tab"],

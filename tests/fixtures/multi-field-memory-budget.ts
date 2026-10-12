@@ -9,7 +9,7 @@ async function main() {
     title: `entry ${i}`,
     url: `https://example.com/${i}/参考资料/${"reference/".repeat(30)}`,
   }));
-  const index = new SearchIndex(entries);
+  const index = new SearchIndex(entries, "full-url");
   // 英文标题不能满足这些查询，必须展开完整长 URL 中的中文拼音。
   for (const [query, expected] of [
     ["cankao", "参考"],

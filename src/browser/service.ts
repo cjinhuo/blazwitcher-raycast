@@ -30,6 +30,7 @@ const emptyStates = (): DataSnapshot["states"] => ({
 /** 在 Raycast 扩展进程内持有索引；查询序号和数据版本阻止旧结果执行操作。 */
 export class BrowserService {
   private options = defaultBrowserOptions;
+  private configured = false;
   private profiles: Profile[] = [];
   private profileId = "";
   private entries: Record<Source, BrowserEntry[]> = {
@@ -64,7 +65,15 @@ export class BrowserService {
   private changed(source?: Source | "all") {
     if (source) {
       if (source === "all")
-        this.index = new SearchIndex(Object.values(this.entries).flat());
+        this.index = new SearchIndex(
+          [
+            this.entries.tab,
+            this.entries.history,
+            this.entries.bookmark,
+          ].flat(),
+          this.options.searchStrategy,
+          this.options,
+        );
       else this.index.replaceSource(source, this.entries[source]);
       this.version++;
       this.searchToken++;
@@ -75,19 +84,33 @@ export class BrowserService {
 
   async configure(options: BrowserOptions, profileId?: string) {
     const normalized = normalizeBrowserOptions(options);
+    const previous = this.options;
+    const profileChanged =
+      profileId !== undefined && profileId !== this.profileId;
     const changed =
-      JSON.stringify(this.options) !== JSON.stringify(normalized) ||
-      (profileId !== undefined && profileId !== this.profileId);
+      JSON.stringify(previous) !== JSON.stringify(normalized) || profileChanged;
+    const dataChanged =
+      !this.configured ||
+      Object.values(this.states).some((state) => state.loading) ||
+      profileChanged ||
+      previous.scope !== normalized.scope ||
+      previous.historyLimit !== normalized.historyLimit ||
+      previous.historyDays !== normalized.historyDays ||
+      previous.includeIncognito !== normalized.includeIncognito ||
+      previous.startupPreview !== normalized.startupPreview;
     this.options = normalized;
+    this.configured = true;
     if (!normalized.startupPreview) this.clearPreviewCache();
     // 先保存选择意图，读取完成前的刷新也必须使用新配置。
     if (profileId !== undefined) this.profileId = profileId;
     if (changed) {
-      this.entries = { tab: [], bookmark: [], history: [] };
-      this.states = emptyStates();
+      if (dataChanged) {
+        this.entries = { tab: [], bookmark: [], history: [] };
+        this.states = emptyStates();
+      }
       this.changed("all");
     }
-    await this.load(true);
+    if (dataChanged) await this.load(true);
   }
 
   refresh() {
@@ -177,7 +200,7 @@ export class BrowserService {
           for (const source of ["bookmark", "history"] as const) {
             if (!wanted.includes(source) || this.entries[source].length)
               continue;
-            const cached = selected.flatMap(
+            let cached = selected.flatMap(
               (profile) =>
                 this.previews!.read(
                   source,
@@ -185,9 +208,17 @@ export class BrowserService {
                   source === "history" ? options.historyLimit : 100,
                 ) ?? [],
             );
-            if (!cached.length) continue;
-            if (source === "history")
+            if (source === "history") {
+              const days = options.historyDays ?? 14;
+              if (days > 0) {
+                const since = Date.now() - days * 86_400_000;
+                cached = cached.filter(
+                  (entry) => (entry.visitedAt ?? 0) >= since,
+                );
+              }
               cached.sort((a, b) => (b.visitedAt ?? 0) - (a.visitedAt ?? 0));
+            }
+            if (!cached.length) continue;
             this.entries[source] =
               source === "history"
                 ? cached.slice(0, options.historyLimit)
@@ -233,6 +264,7 @@ export class BrowserService {
                   const result = await this.io.readHistory(
                     profile,
                     options.historyLimit,
+                    options.historyDays,
                   );
                   if (!live()) return;
                   entries.push(...result);
@@ -306,7 +338,12 @@ export class BrowserService {
       this.entries.tab.length === 0
         ? "tab"
         : scope;
-    const key = JSON.stringify([this.version, scope, request.query]);
+    const key = JSON.stringify([
+      this.version,
+      this.options.searchStrategy,
+      scope,
+      request.query,
+    ]);
     const matches =
       this.cache?.key === key
         ? this.cache.results
@@ -317,9 +354,11 @@ export class BrowserService {
           );
     if (token !== this.searchToken || request.version !== this.version)
       throw new Error("STALE_RESULT");
-    // 在分页与缓存前统一去重；单来源仍可查看每条原始记录。
+    // 默认策略在索引内按 Chrome 规则对所有 scope 去重与截断；增强模式保留旧行为。
     const results =
-      this.cache?.key === key || scope !== "all"
+      this.cache?.key === key ||
+      scope !== "all" ||
+      this.options.searchStrategy !== "full-url"
         ? matches
         : deduplicateResults(matches);
     this.cache = { key, results, requestId: request.requestId };

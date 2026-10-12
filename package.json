@@ -30,20 +30,79 @@
   ],
   "preferences": [
     {
+      "name": "searchStrategy",
+      "title": "搜索方式",
+      "description": "默认按 Chrome Blaz 的标题与域名匹配和排序。完整网址模式可搜索路径、参数与片段，并保留标题优先排序。",
+      "type": "dropdown",
+      "default": "chrome",
+      "required": false,
+      "data": [
+        {
+          "title": "与 Chrome Blaz 一致",
+          "value": "chrome"
+        },
+        {
+          "title": "完整网址搜索",
+          "value": "full-url"
+        }
+      ]
+    },
+    {
+      "name": "historyDays",
+      "title": "历史记录时间范围（天）",
+      "description": "默认最近 14 天，与 Chrome Blaz 一致；填 0 可读取不限日期的历史。",
+      "type": "textfield",
+      "default": "14",
+      "required": false
+    },
+    {
+      "name": "historyLimit",
+      "title": "历史记录读取上限",
+      "description": "按最近访问排序读取的条数，默认 1000，与 Chrome Blaz 一致；上限 100000。",
+      "type": "textfield",
+      "default": "1000",
+      "required": false
+    },
+    {
+      "name": "historyDisplayCount",
+      "title": "历史记录显示数量",
+      "description": "每次搜索最多显示的历史结果，包含进入最优建议的历史；范围 1–20，默认 10。",
+      "type": "textfield",
+      "default": "10",
+      "required": false
+    },
+    {
+      "name": "bookmarkDisplayCount",
+      "title": "书签显示数量",
+      "description": "每次搜索最多显示的书签结果，包含进入最优建议的书签；范围 1–20，默认 10。",
+      "type": "textfield",
+      "default": "10",
+      "required": false
+    },
+    {
+      "name": "topSuggestionsCount",
+      "title": "最优建议数量",
+      "description": "输入关键词后，把排序最靠前的结果放到最优建议；范围 1–10，默认 2。不会额外增加结果。",
+      "type": "textfield",
+      "default": "2",
+      "required": false
+    },
+    {
+      "name": "enableConsecutiveSearch",
+      "title": "严格搜索（英文连续匹配）",
+      "label": "英文字符必须连续命中",
+      "description": "默认关闭。开启后 rct 不再匹配 React；中文仍支持拼音与首字母。",
+      "type": "checkbox",
+      "default": false,
+      "required": false
+    },
+    {
       "name": "startupPreview",
       "title": "启动预览缓存",
       "label": "优先显示上次结果，再读取完整数据",
       "description": "每个 Chrome 配置最多缓存 100 条书签和 100 条历史，有效期 5 分钟，仅存于本机；不缓存标签页或无痕数据。关闭后不再使用缓存。",
       "type": "checkbox",
       "default": true,
-      "required": false
-    },
-    {
-      "name": "historyLimit",
-      "title": "历史记录读取上限",
-      "description": "按最近访问排序读取的条数，默认 20000；上限 100000。拼音搜索在这些记录中进行。",
-      "type": "textfield",
-      "default": "20000",
       "required": false
     },
     {
@@ -54,28 +113,6 @@
       "type": "checkbox",
       "default": false,
       "required": false
-    },
-    {
-      "name": "sourceShortcuts",
-      "title": "旧版来源快捷键（仅首次迁移）",
-      "description": "仅在首次打开新版本时迁移旧设置；以后请在命令动作菜单的“快捷键设置”中修改，此项不再生效。",
-      "type": "dropdown",
-      "default": "cmd-shift",
-      "required": false,
-      "data": [
-        {
-          "title": "⌘⇧0 / 1 / 2 / 3",
-          "value": "cmd-shift"
-        },
-        {
-          "title": "⌃⇧0 / 1 / 2 / 3",
-          "value": "ctrl-shift"
-        },
-        {
-          "title": "关闭（保留动作菜单）",
-          "value": "none"
-        }
-      ]
     }
   ],
   "scripts": {

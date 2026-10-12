@@ -136,23 +136,12 @@ export function serializeShortcuts(overrides: ShortcutOverrides) {
   return JSON.stringify({ version: 1, overrides: normalized });
 }
 
-export function loadShortcutConfig(
-  raw: string | undefined,
-  legacy = "cmd-shift",
-): { overrides: ShortcutOverrides; needsSave: boolean; error?: string } {
-  if (raw === undefined) {
-    const overrides: ShortcutOverrides = {};
-    if (legacy === "ctrl-shift" || legacy === "none")
-      for (const [index, scope] of [
-        "all",
-        "tab",
-        "bookmark",
-        "history",
-      ].entries())
-        overrides[`source.${scope}` as ActionId] =
-          legacy === "none" ? null : `ctrl+shift+${index}`;
-    return { overrides, needsSave: true };
-  }
+export function loadShortcutConfig(raw: string | undefined): {
+  overrides: ShortcutOverrides;
+  needsSave: boolean;
+  error?: string;
+} {
+  if (raw === undefined) return { overrides: {}, needsSave: true };
   try {
     const parsed = JSON.parse(raw);
     if (

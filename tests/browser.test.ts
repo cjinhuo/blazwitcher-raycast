@@ -29,7 +29,7 @@ test("Chrome 独占锁下读取稳定副本，源事务保持不变", () =>
       db.exec(
         "CREATE TABLE urls (id INTEGER, url TEXT, title TEXT, last_visit_time INTEGER); INSERT INTO urls VALUES (1,'https://example.com/','已提交',11644473601000000); BEGIN EXCLUSIVE; UPDATE urls SET title='未提交';",
       );
-      const entries = await readHistory(profile, 10);
+      const entries = await readHistory(profile, 10, 0);
       assert.equal(entries[0].title, "已提交");
       assert.equal(
         (db.prepare("SELECT title FROM urls").get() as { title: string }).title,
@@ -140,12 +140,12 @@ test("真实 SQLite 只读查询、排序、条数及 Chrome 时间转换", () =
       database,
       "CREATE TABLE urls (id INTEGER, url TEXT, title TEXT, last_visit_time INTEGER); INSERT INTO urls VALUES (1,'https://example.com/old','旧记录',11644473601000000),(2,'https://example.com/new','新记录',11644473602000000),(3,'https://example.com/none','未访问',0);",
     ]);
-    const entries = await readHistory(profile, 1);
+    const entries = await readHistory(profile, 1, 0);
     assert.equal(entries.length, 1);
     assert.equal(entries[0].title, "新记录");
     assert.equal(entries[0].visitedAt, 2000);
     assert.equal(chromeTimeToUnix(11644473600000000), 0);
-    assert.equal(parseHistoryLimit("1; DROP TABLE urls"), 20000);
+    assert.equal(parseHistoryLimit("1; DROP TABLE urls"), 1000);
     assert.equal(parseHistoryLimit("10000000"), 100000);
   }));
 

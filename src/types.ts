@@ -34,6 +34,8 @@ export interface BrowserEntry {
   tabId?: string;
   windowId?: string;
   active?: boolean;
+  /** 仅接收真实浏览器元数据；当前 JXA 标签采集不提供此字段。 */
+  lastAccessed?: number;
   tabGroup?: ChromeTabGroup;
   incognito?: boolean;
   folder?: string;
