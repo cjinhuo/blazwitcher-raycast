@@ -25,7 +25,7 @@ export class StartupPreviewCache {
       const value = JSON.parse(raw);
       const age = this.now() - value.savedAt;
       if (
-        value.version !== 1 ||
+        value.version !== 2 ||
         !Number.isFinite(age) ||
         age < 0 ||
         age > 5 * 60_000 ||
@@ -63,7 +63,8 @@ export class StartupPreviewCache {
       }));
     try {
       const raw = JSON.stringify({
-        version: 1,
+        // 旧预览曾把无标题记录回填成完整 URL，不能沿用到默认 host 搜索。
+        version: 2,
         savedAt: this.now(),
         entries: rows,
       });

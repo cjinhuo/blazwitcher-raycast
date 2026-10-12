@@ -10,7 +10,7 @@ async function main() {
     url: `https://example.com/${i}/${"reference/".repeat(30)}`,
   }));
   // 连续查询覆盖缓存累积；长 URL 会放大按条数缓存拼音边界的旧问题。
-  const index = new SearchIndex(entries);
+  const index = new SearchIndex(entries, "full-url");
   for (const query of ["git 备wang", "zw", "zhongwen"]) {
     const results = await index.search(query, "history");
     assert.equal(results.length, 20000);

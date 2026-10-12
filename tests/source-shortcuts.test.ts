@@ -7,9 +7,9 @@ import {
   raycastShortcut,
 } from "../src/shortcuts";
 
-function sourceShortcut(scope: Scope, preference?: string) {
+function sourceShortcut(scope: Scope) {
   return raycastShortcut(
-    effectiveShortcuts(loadShortcutConfig(undefined, preference).overrides)[
+    effectiveShortcuts(loadShortcutConfig(undefined).overrides)[
       `source.${scope}`
     ],
   );
@@ -49,7 +49,7 @@ test("切换到相同有效来源不会改变实际查询", () => {
   }
 });
 
-test("来源快捷键默认命令组合、可改控制组合或关闭", () => {
+test("来源快捷键默认命令组合，自定义设置可改控制组合或关闭", () => {
   for (const [scope, key] of [
     ["all", "0"],
     ["tab", "1"],
@@ -60,14 +60,22 @@ test("来源快捷键默认命令组合、可改控制组合或关闭", () => {
       modifiers: ["cmd", "shift"],
       key,
     });
-    assert.deepEqual(sourceShortcut(scope, "cmd-shift"), {
-      modifiers: ["cmd", "shift"],
-      key,
-    });
-    assert.deepEqual(sourceShortcut(scope, "ctrl-shift"), {
-      modifiers: ["ctrl", "shift"],
-      key,
-    });
-    assert.equal(sourceShortcut(scope, "none"), undefined);
+    assert.deepEqual(
+      raycastShortcut(
+        effectiveShortcuts({ [`source.${scope}`]: `ctrl+shift+${key}` })[
+          `source.${scope}`
+        ],
+      ),
+      {
+        modifiers: ["ctrl", "shift"],
+        key,
+      },
+    );
+    assert.equal(
+      raycastShortcut(
+        effectiveShortcuts({ [`source.${scope}`]: null })[`source.${scope}`],
+      ),
+      undefined,
+    );
   }
 });

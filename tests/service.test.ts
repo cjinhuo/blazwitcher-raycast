@@ -204,7 +204,11 @@ for (const selectedId of ["Profile 1", "all"])
         warnings: [],
       }),
     });
-    const options = { ...defaultBrowserOptions, scope: "bookmark" as const };
+    const options = {
+      ...defaultBrowserOptions,
+      scope: "bookmark" as const,
+      searchStrategy: "full-url" as const,
+    };
     await service.configure(options);
     const switching = service.configure(options, selectedId);
     await service.refresh();
