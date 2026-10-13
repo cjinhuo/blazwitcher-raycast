@@ -1,12 +1,143 @@
-# Blazwitcher 拼音搜索
+<p align="center">
+  <img src="media/icon.png" alt="Blazwitcher Raycast icon" width="96" height="96" />
+</p>
 
-在 Raycast 窗口内搜索 Chrome 标签页、书签和历史记录。默认使用单栏列表，保留搜索框、来源筛选、结果数量、网站图标、标题、灰色网址、来源标签和底部操作栏；按 `⌘D` 可展开右侧详情。
+# Blazwitcher for Raycast
 
-**当前限制：行内彩色命中高亮尚未实现。** Clipboard History 使用 Raycast 内部 `HighlightRoot`，第三方 `List.Item` 没有相同接口。搜索仍由 `text-search-engine@1.6.0` 完成，并保留原文命中区间；`zhoubao` 能找到“周报”，但目前列表不会为这两个字着色。不添加「」等标记，也不使用独立浮窗或详情栏替代。
+Search Chrome tabs, bookmarks, and history with Chinese, Pinyin, initials, or English — from one Raycast command.
 
-## 安装到 Raycast
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-Blazwitcher Raycast 目前通过源码安装。需要 macOS、Google Chrome、Raycast，以及 Node.js 22.22.2 或更新版本；不需要全局安装 Raycast CLI。
+Open **搜索浏览器** (Search Browser) in Raycast to search tabs, bookmarks, and history in one list.
+
+![Search browser from Raycast](media/search-overview.png)
+
+Blazwitcher for Raycast is the Raycast edition of Blazwitcher, a Chrome extension for searching tabs, bookmarks, and history with fuzzy Pinyin search. Install the browser edition from the [Chrome Web Store](https://chromewebstore.google.com/detail/blazwitcher-search-and-sw/fjgablnemienkegdnbihhemebmmonihg) or explore its [GitHub source](https://github.com/cjinhuo/blazwitcher).
+
+Use the keyboard to switch to an open tab or reopen a saved or previously visited page. The interface uses Raycast's native list, action menu, and shortcuts. Both editions use [text-search-engine](https://github.com/cjinhuo/text-search-engine) for search.
+
+**Page-content preview requires the official [Raycast Browser Extension](https://www.raycast.com/browser-extension) to be installed and enabled in Chrome.** Select an open tab and press **`⌘D`** to preview its extracted page content in Raycast's detail panel.
+
+## How it connects to Chrome
+
+| Data or action                       | Access method                                                                                                                                                    |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Open tabs and navigation             | JXA scripts read Chrome's current windows and tabs, focus a specific tab, or open a URL in the captured current tab or a new tab                                 |
+| Bookmarks                            | Read and parse Chrome's local `Bookmarks` and `AccountBookmarks` JSON files                                                                                      |
+| History                              | Query Chrome's local `History` SQLite database without modifying the original                                                                                    |
+| Page preview and available tab icons | The official Raycast Browser Extension provides `BrowserExtension.getTabs()` and `BrowserExtension.getContent()`; `getContent()` supplies the Markdown page body |
+
+JXA runs through macOS's `osascript` and uses the same automation mechanism as AppleScript. Allow Raycast to control Google Chrome when prompted. Basic search and navigation work without the browser companion; page-content preview requires it.
+
+## Features
+
+### Fuzzy Pinyin search
+
+Powered by [text-search-engine](https://github.com/cjinhuo/text-search-engine), fuzzy search supports mixed Chinese and English queries. More consecutive matches rank higher; equally relevant history results are ordered by most recent visit to help you locate the target quickly. Search capabilities include:
+
+- Pinyin initials and full Pinyin search, with mixed Chinese, Pinyin, and English input.
+- Domain and space-separated word search, with words matched in any order.
+
+By default, it searches titles and domains using the matching and ranking rules of the [Blazwitcher Chrome extension](https://chromewebstore.google.com/detail/blazwitcher-search-and-sw/fjgablnemienkegdnbihhemebmmonihg) ([GitHub source](https://github.com/cjinhuo/blazwitcher)). This mode appears as **与 Chrome Blaz 一致** (Match Chrome Blaz) in preferences; "Chrome Blaz" refers to the Blazwitcher browser edition. To search URL paths, query parameters, or fragments, select **完整网址搜索** (Full URL Search), which also retains title-first ranking.
+
+### `⌘D` page preview
+
+Install and enable the official [Raycast Browser Extension](https://www.raycast.com/browser-extension) to make the preview available. Select a result and press `⌘D`, or choose **展开预览** (Expand Preview) in Actions, to show the native detail panel. It starts collapsed each time you open the command.
+
+![Page content in the command's detail panel](media/page-preview.png)
+
+For ordinary HTTP(S) tabs, the panel can display the page's extracted Markdown. Bookmarks, history, incognito tabs, and special-protocol pages show existing metadata only. **刷新预览** (Refresh Preview) rereads the selected tab's content without reloading the Chrome page.
+
+Some existing tabs may fail to connect, and dynamic pages may produce incomplete content. The preview entry is hidden when the browser-extension capability is unavailable. See the [preview notes](docs/详情预览试用说明.md) for known limitations.
+
+![Expand, scroll, and collapse the page preview](media/page-preview.gif)
+
+[Watch the page-preview recording (MP4)](media/page-preview.mp4).
+
+### Tabs, bookmarks, and history in one list
+
+Use the source dropdown, a query prefix, or a shortcut to narrow your search.
+
+| Source      | Query prefix | Default shortcut |
+| ----------- | ------------ | ---------------- |
+| All sources | —            | `⌘⇧0`            |
+| Open tabs   | `/t`         | `⌘⇧1`            |
+| Bookmarks   | `/b`         | `⌘⇧2`            |
+| History     | `/h`         | `⌘⇧3`            |
+
+Switching sources keeps the keywords and removes the previous prefix.
+
+In the default mode, duplicates are merged after source filtering and matching. Separate open tabs remain separate; bookmarks and history with identical titles or full URLs are merged, keeping tabs, then history, then bookmarks. History-only and bookmark-only searches also merge duplicates. Full URL Search uses its original ranking and duplicate handling; see the [search strategy notes](docs/默认搜索策略对齐.md).
+
+With keywords entered, the first **2** results appear in **最优建议** (Top Suggestions), followed by the remaining results in tab, history, and bookmark sections. History and bookmarks each show up to **10** results by default, including any results in Top Suggestions. Both counts and the suggestion count are configurable.
+
+![Filter tabs, bookmarks, and history](media/source-filters.gif)
+
+### Search modes and preferences
+
+Open **`⌘K` → 扩展设置** (Extension Preferences) to choose a search mode and customize its parameters. Both modes support the same result counts and strict-search option.
+
+| Preference                                  | Default                                 | Options                                                                                                                 |
+| ------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 搜索方式 (Search Mode)                      | 与 Chrome Blaz 一致 (Match Chrome Blaz) | Titles and domains; choose 完整网址搜索 (Full URL Search) to include the rest of the URL and retain title-first ranking |
+| 历史记录时间范围（天） (History Date Range) | 14 days                                 | 0–36,500 days; 0 removes the date limit                                                                                 |
+| 历史记录读取上限 (History Reading Limit)    | 1,000                                   | 1–100,000 records, read by most recent visit                                                                            |
+| 历史记录显示数量 (History Result Count)     | 10                                      | 1–20 per search, including Top Suggestions                                                                              |
+| 书签显示数量 (Bookmark Result Count)        | 10                                      | 1–20 per search, including Top Suggestions                                                                              |
+| 最优建议数量 (Top Suggestions)              | 2                                       | 1–10 when keywords are entered; hidden for an empty query                                                               |
+| 严格搜索（英文连续匹配） (Strict Search)    | Off                                     | Require consecutive English-character matches; Chinese Pinyin and initials remain supported                             |
+
+The reading limit controls how many history records can be searched; result counts control how many matches appear. Top Suggestions moves the first results into its own section without adding results. Save preferences, then reopen the command. Values above a setting's maximum are capped; invalid input uses its default.
+
+Existing saved preferences are preserved. Raycast and the Chrome edition save their settings independently; matching defaults do not automatically synchronize custom settings or guarantee identical tab ordering. See the [search strategy notes](docs/默认搜索策略对齐.md) for details.
+
+![Raycast search preferences](docs/screenshots/search-settings.png)
+
+The screenshot shows an existing user's reading limit of **2,000**; the default for a new installation is **1,000**.
+
+![Change search preferences and verify the result](media/search-settings.gif)
+
+### Open the page you mean
+
+Press `Enter` on a tab to focus that exact tab. For a bookmark or history result, it opens in the Chrome profile the record belongs to.
+
+You can also open any result in a new tab or in the tab that was active when you launched the command. These actions retain the captured Chrome target; if it is no longer available, the extension reports the failure rather than choosing another tab.
+
+![Focus an existing tab and open a new tab](media/open-actions.gif)
+
+### Keyboard control and custom shortcuts
+
+| Action                                  | Default shortcut     |
+| --------------------------------------- | -------------------- |
+| Select a result                         | `↑` / `↓`            |
+| Open a result or focus a tab            | `Enter`              |
+| Open in a new tab                       | `⌘Enter`             |
+| Open in the captured current tab        | `⇧Enter`             |
+| Copy the full URL                       | `⌘C`                 |
+| Open Actions                            | `⌘K`                 |
+| Expand or collapse the optional preview | `⌘D`, when available |
+
+Open Actions → **快捷键设置** (Shortcut Settings) to customize additional bindings or restore defaults. Changes persist across command sessions. Raycast controls the primary `Enter` and `⌘Enter` actions.
+
+To launch the command directly, assign a hotkey or alias in Raycast Settings → Extensions. The Raycast edition has no predefined global activation hotkey.
+
+<!-- Demo: media/shortcut-settings.gif -->
+
+### Chrome profiles and local startup cache
+
+Open Actions → **切换 Chrome 配置** (Switch Chrome Profile) to filter bookmarks and history by a specific profile or search all profiles. Open tabs still come from all readable Chrome windows.
+
+New installations read up to **1,000 history records from the last 14 days**. Adjust both values in extension preferences; the reading limit can reach **100,000**, and **0** days means all dates. The limit also applies to combined history across profiles. Existing saved preferences are retained. Incognito tabs are excluded by default and can be enabled in preferences.
+
+The startup cache is enabled by default. It displays a small local snapshot of bookmarks and history while fresh data loads, with cached results labeled. Cached history is filtered by the current date range. Disable the cache in preferences or clear it from Actions → **清除启动缓存** (Clear Startup Cache).
+
+<!-- Demo: media/profile-settings.gif -->
+
+## Install and get started
+
+The extension is currently installed from source; a Raycast Store installation link will be added after publication.
+
+Requirements: **macOS**, **Google Chrome**, **Raycast**, and **Node.js 22.22.2 or later** for installing from source. Start Chrome at least once before using the extension.
 
 ```bash
 git clone https://github.com/cjinhuo/blazwitcher-raycast.git
@@ -15,99 +146,32 @@ npm ci
 npm run dev
 ```
 
-终端出现 `ready - built extension successfully` 后，打开 Raycast，搜索并运行“搜索浏览器”。首次切换标签页时，macOS 可能询问是否允许 Raycast 控制 Google Chrome，请按提示授权。
+After the build succeeds, open Raycast, search for `Blazwitcher`, and run **搜索浏览器** (Search Browser). Current command and menu labels are in Chinese.
 
-`npm run dev` 会把扩展导入 Raycast 并监听源码修改。导入完成后可按 `Ctrl+C` 停止监听；需要升级时，在仓库中执行 `git pull`、`npm ci`，再运行一次 `npm run dev`。详细的调试、权限排查与卸载步骤见 [贡献指南](CONTRIBUTING.md)。
+1. Enter a title, Pinyin, initials, or domain fragment.
+2. Select the result with `↑` / `↓`.
+3. Press `Enter` to focus or open the page, or `⌘K` for more actions.
+4. For page preview, install and enable the official [Raycast Browser Extension](https://www.raycast.com/browser-extension) in Chrome, then select an open tab and press `⌘D`.
 
-## 使用
+`npm run dev` imports the extension and watches for changes. After import, `Ctrl+C` stops the watcher; the installed command remains available. For updates, run `git pull`, `npm ci`, and `npm run dev` again. More setup and troubleshooting details are in the [contributing guide](CONTRIBUTING.md).
 
-统一入口首次打开时会先展示 Chrome 标签页，再渐进加入历史和书签，与 Chrome 扩展的首屏顺序保持一致。
+### macOS automation permission
 
-仅保留“搜索浏览器”入口，支持来源下拉框和 `/t`、`/b`、`/h` 前缀。旧版“搜索标签页／书签／历史记录”入口已移除；为旧入口设置过 Raycast 启动热键的用户，需要把热键改绑到“搜索浏览器”。
+The first tab operation may ask you to allow **Raycast to control Google Chrome**. This permission lets the local automation scripts read and switch tabs. If access was denied, open System Settings → Privacy & Security → Automation, enable Google Chrome under Raycast, and reopen the command.
 
-默认“与 Chrome Blaz 一致”模式搜索去除首尾空格的标题与域名，使用相同的 0.6 严格度和命中段数排序；不再额外给标题命中加分。历史在相同命中段数下按最近访问排序，各展示最多 10 条历史和 10 条书签，查询时前两条为最优建议。标题与域名仍支持中文、全拼、首字母和混合搜索。
+## Scope and privacy
 
-来源过滤后再去重：所有真实标签页都保留，历史与书签按相同标题或完整 URL 合并。全部来源固定按标签、历史、书签采集顺序决定保留记录；单一历史或书签来源同样去重。空关键词遵循相同去重与显示上限。复制与跳转始终使用原始完整 URL。
+- This edition supports **Google Chrome on macOS** and runs inside Raycast. The separate [Blazwitcher browser extension](https://github.com/cjinhuo/blazwitcher) provides the browser-side interface and AI tab grouping.
+- Default search covers titles and domains; Full URL Search adds URL paths, query parameters, and fragments. The optional preview does not add page-body search, summaries, or AI features.
+- The result list currently does not color-highlight matched characters.
+- Browser data is searched locally. Chrome bookmarks, history, and favicon databases are read without modifying the originals. The extension does not read Chrome cookies or send browsing data to a search or AI service.
+- The optional startup cache stores at most 100 bookmarks and 100 history records per profile for five minutes, within a 512 KB total limit. It includes titles and URLs; it excludes tabs and incognito data.
+- Page-preview text stays in memory for the current command session. It is not written to disk or added to the search index. Favicon images returned by the official browser extension may be loaded from their supplied URLs.
 
-需要搜索路径、查询参数、片段，或使用原来的标题优先与长词重试策略时，可在 Raycast 扩展设置选择“完整网址搜索”。这是显式增强模式，结果排序与 Chrome 不完全相同；两种模式都使用用户配置的历史、书签展示数量与严格搜索开关。不会覆盖用户已配置的历史读取上限或时间范围。
+## Contribute
 
-在“搜索浏览器”中打开 `⌘K → 扩展设置`，可配置以下搜索参数。读取上限控制候选数据量，显示数量控制匹配后的列表；最优建议从列表中移出前 N 条，不额外增加结果。
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development and troubleshooting, and the [verification records](docs/验证记录.md) for the boundaries of previous tests. Report reproducible issues in [GitHub Issues](https://github.com/cjinhuo/blazwitcher-raycast/issues).
 
-| 参数                     | 默认值 | 配置含义                                            |
-| ------------------------ | ------ | --------------------------------------------------- |
-| 历史记录时间范围         | 14 天  | 范围 0–36500 天，0 表示不限日期                     |
-| 历史记录读取上限         | 1000   | 范围 1–100000 条，按最近访问读取                    |
-| 历史记录显示数量         | 10     | 每次搜索显示 1–20 条，包含最优建议中的历史          |
-| 书签显示数量             | 10     | 每次搜索显示 1–20 条，包含最优建议中的书签          |
-| 最优建议数量             | 2      | 输入关键词后显示前 1–10 条，空查询不显示建议区      |
-| 严格搜索（英文连续匹配） | 关闭   | 开启后 `rct` 不匹配 `React`；中文仍支持拼音与首字母 |
+Preparing screenshots or GIFs? Follow the [recording checklist](docs/media-guide.md) for scenes, filenames, and Store screenshot requirements.
 
-保存后重新打开命令使用新配置。数值超过上限时按上限处理，无效输入使用默认值；这是读取配置时的校验，输入框不会即时限制填写。搜索参数由 Raycast 扩展设置统一保存，快捷键在命令内单独设置。
-
-JXA 标签采集没有 Chrome 的 `lastAccessed` 元数据；标签同相关度时优先当前激活标签，其他标签保留采集顺序。历史和书签跨端对比仍需两端使用相同 Chrome 配置、读取范围与数据快照。详细策略与验收边界见 [默认搜索策略对齐记录](docs/默认搜索策略对齐.md)。
-
-按 `⌘⇧0/1/2/3` 分别切换全部、标签页、书签、历史记录，也可在 `⌘K` 动作菜单选择来源。切换保留关键词并移除旧来源前缀，例如 `/h zhoubao` 切换到标签页后变为 `zhoubao`。下拉框始终显示有效来源，空结果时也能切换来源和打开快捷键设置。
-
-每种来源的前四项动作顺序一致：
-
-| 动作             | 默认快捷键             | 行为                                                           |
-| ---------------- | ---------------------- | -------------------------------------------------------------- |
-| 打开             | Enter（Raycast 提供）  | 标签按真实 ID 聚焦；书签、历史在记录所属 Chrome 配置中打开     |
-| 在新标签页打开   | ⌘Enter（Raycast 提供） | 在命令打开时的 Chrome 窗口新建标签；当时没有窗口则新建普通窗口 |
-| 在当前标签页打开 | ⇧Enter                 | 替换命令打开时捕获的 Chrome 标签 URL                           |
-| 复制地址         | ⌘C                     | 复制原始完整 URL                                               |
-
-当前页和新标签动作执行前重新校验捕获的窗口／标签。目标关闭或移出原窗口时明确失败，不改用其他窗口或标签；新标签仅要求原窗口仍存在。等待捕获期间结果更新也会拒绝旧操作。自动化权限失败或超时不影响复制，捕获失败不阻止独立的标签聚焦。
-
-在动作菜单打开“快捷键设置”，按通用、标签页、书签、历史分组设置 `cmd+shift+1`、`ctrl+o`、`shift+enter` 等组合；保存后立即生效。留空只停用额外绑定，菜单动作保留；第一、第二项的 Enter／⌘Enter 由 Raycast 提供，自定义键不能将其停用或改绑给其他动作。同一来源同时出现的动作不能冲突，不同来源专属动作可以使用相同按键。提供一键恢复默认。
-
-快捷键覆盖值只保存在 Raycast LocalStorage。新用户默认使用 `⌘⇧0/1/2/3` 切换来源，已有的自定义绑定和停用设置继续保留。所有修改统一在 `⌘K → 快捷键设置` 中完成。配置损坏时显示错误并暂停额外绑定，可在设置中保存或恢复默认。
-
-### 可选详情
-
-**当前为试用功能。** 基础预览和紧凑布局已实现，部分已有标签的正文连接仍不稳定，入口可发现性及动态网页适配也需要继续完善。实现、验证边界和后续计划见 [详情预览试用说明](docs/详情预览试用说明.md)。
-
-按 `⌘D` 或在动作菜单选择“显示详情”，查看选中结果的标题、域名链接、来源以及已有的配置、标签组、书签文件夹或访问时间。展开后左侧仅展示标题，右侧基础信息和正文统一滚动；域名链接指向完整地址，`⌘C` 仍复制原始 URL。上下选择时详情跟随；再次按 `⌘D` 收起，保留搜索词和选中项。每次重新打开命令默认收起。
-
-普通网页标签通过官方 Raycast 浏览器扩展读取 Markdown 正文。选中稳定 250ms 后才请求，读取前后核对标签 ID 与地址；读取失败、未安装扩展、空正文或 6 秒超时只显示状态，搜索与打开仍可使用。书签、历史、无痕和特殊协议页面仅展示基础信息，不自动打开页面。动态网站的正文提取效果取决于浏览器扩展的阅读模式。
-
-若提示标签尚未连接扩展，先在 Chrome 刷新该页面，再刷新预览；仍失败时检查扩展的网站访问权限。预览将正文标题缩小、图片改为链接，避免窄面板被大标题或大图占满，代码示例保留原样。
-
-正文是读取时的快照，最多展示前 8000 字符，可在动作菜单中“刷新预览”。当前命令内最多缓存 10 份正文、30 秒内复用，退出命令释放，不写入磁盘或索引。详情开关可在快捷键设置中改绑或停用；若旧配置已经占用 `⌘D`，保留旧绑定，详情仍可通过菜单打开。
-
-- 上下键选择，`⌘K` 打开原生操作菜单；失败时保留结果。
-- 已移除“刷新浏览器数据”和 `⌘R` 绑定。需要重新读取时退出并重新打开命令；切换 Chrome 配置仍会重新读取。
-- 操作菜单可切换 Chrome 配置及打开扩展设置。
-- 历史默认读取最近 14 天的 1,000 条，上限 100,000 条；可在扩展设置调整，时间范围填 0 表示不限日期。全部配置合并后仍受总上限约束。
-- 历史结果右侧显示最近访问的相对时间，悬停查看本机时区的完整日期和时间；所有来源筛选均支持。
-- 无痕标签默认排除，设置位于 Raycast 扩展偏好。
-- 普通标签页可通过官方 Raycast Browser Extension 显示网站图标。它是可选增强：未安装时不弹安装提示；调用失败、超过 1.5 秒、图标缺失或图片加载失败时保留来源图标。书签和历史按完整 URL 复用已打开页面的图标；缺失时只读所属 Chrome 配置的本地 `Favicons` 缓存，无缓存或图片加载失败时保留来源图标。无痕标签保持来源图标。重新打开命令或切换 Chrome 配置时重新获取图标，未订阅实时图标变化。
-- 默认启用启动预览缓存：先展示上次的部分书签、历史，再用实时完整结果替换；预览阶段显示“已加载结果”和缓存提示。可在扩展设置关闭，或在动作菜单选择“清除启动缓存”。标签页始终实时读取。
-
-当前原生列表的标题、网址在同一行展示，行高、灰色选中背景、截断和明暗主题由 Raycast 管理；SDK 没有自定义双行 DOM 布局接口。
-
-## 数据与隐私
-
-搜索与索引在本机处理，不上传到搜索或图标聚合服务，不持久化完整浏览索引。启用官方浏览器扩展时，Raycast 按 API 返回的 favicon 地址加载图片；本扩展不读取或转发 Chrome Cookie。权限提示归属 **Raycast**。
-
-图标通过 `BrowserIconAdapter` 独立异步加载，不参与搜索索引、排序或跳转。`RaycastBrowserIconAdapter` 对 ID 与 URL 同时匹配的普通标签补图标，并为书签和历史复用完整 URL 一致的页面图标。`ChromePageIconAdapter` 补齐其余书签和历史，不按域名猜测、不跨配置查找。官方 SDK 不提供配置或无痕归属字段，因此 SDK 图标仅按完整 URL 匹配，配置隔离仅适用于本地缓存路径。PNG 仅写入私有临时目录，使用内容哈希命名，退出命令时清理；缓存缺失时沿用来源图标。搜索和分页共享同一数据版本的请求，重新读取数据后更新；列表不依赖具体图标提供方。JXA 仍负责读取标签和跳转。
-
-启动预览由 Raycast Cache 存在本机：每个配置最多 100 条书签、100 条历史，有效期 5 分钟，总容量 512 KB，单来源序列化大小不超过 128 KB。仅保存标题、网址及必要的记录字段，不保存配置路径、标签页或无痕记录。过期预览不再使用；关闭该功能后不再读取或写入预览缓存。
-
-SQLite 使用只读查询，锁冲突时读取稳定临时快照，不改写 Chrome 源数据库。标签按真实 ID 重新定位，避免关闭或跨窗口移动后误切标签。单来源读取失败保留其他来源。查询序号和数据版本阻止过期结果被复制或打开。
-
-## 验证
-
-```bash
-npm run check       # 类型检查、回归测试、格式与构建
-npm run test:local  # 真实本地数据诊断，仅输出数量和耗时
-openspec validate restore-raycast-single-list --strict --no-interactive
-```
-
-当前已通过自动化测试和构建。真实单栏界面、高亮能力实验及加载问题以 [验证记录](docs/验证记录.md) 为准，不把旧双栏或独立浮窗的测试结果视为当前验收。
-
-独立 Electron 方案已退出运行并移入忽略目录 `.local/rejected-desktop/` 留作可恢复副本；主项目没有 Electron 包、协议启动入口或安装依赖。
-
-- [实施计划](docs/实施计划.md)
-- [高亮能力调查](docs/Raycast列表高亮调查.md)
-- [协作约定](AGENTS.md)
+[MIT License](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)

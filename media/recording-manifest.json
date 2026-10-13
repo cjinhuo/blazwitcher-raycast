@@ -1,0 +1,22 @@
+{
+  "capture_date": "2026-10-13",
+  "profile": "raycast-blaz",
+  "profile_id": "Profile 3",
+  "source_branch": "codex/search-debounce",
+  "base_commit": "24707bda0e9cdccf91440d9e3413b85702270fb8",
+  "fixture_data": "8 public local pages, 3 bookmarks, 2 groups; 5 initial tabs, 6 after new-tab action",
+  "editing": "trimmed idle holds, cropped to the demo window, concatenated two action clips and two settings clips; no speed changes or fabricated UI",
+  "recordings": [
+    "page-preview",
+    "source-filters",
+    "open-actions",
+    "search-settings"
+  ],
+  "native_checks": {
+    "continuous_input": "Blaz Demo + react -> one React result; result icons present in all 604 decoded capture frames",
+    "sources": "tabs 5, bookmarks 3, history 8",
+    "existing_tab": "address bar react.html; active React tab; tab count remains 5",
+    "new_tab": "address bar git.html; active Git tab; tab count grows to 6",
+    "preferences": "history display 10 -> 5, reopened command shows 5; restored 10, reopened command shows 8; other values preserved"
+  }
+}
