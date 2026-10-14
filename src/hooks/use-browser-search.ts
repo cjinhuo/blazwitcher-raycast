@@ -47,10 +47,8 @@ export function useBrowserSearch(
     }),
     [snapshot?.version, query, scope],
   );
-  const current =
-    page?.requestId === request.requestId && page.version === request.version
-      ? page
-      : undefined;
+  // 输入或来源切换期间保留上一页，新的结果就绪后整体替换。
+  const current = page?.version === request.version ? page : undefined;
 
   useEffect(() => {
     let live = true;
@@ -79,7 +77,12 @@ export function useBrowserSearch(
 
   const cancel = () => service.cancel(++sequence.current);
   const loadMore = async () => {
-    if (!current || loadingMore.current === request.requestId) return;
+    if (
+      !current ||
+      current.requestId !== request.requestId ||
+      loadingMore.current === request.requestId
+    )
+      return;
     loadingMore.current = request.requestId;
     try {
       const next = await service.search({
@@ -107,7 +110,7 @@ export function useBrowserSearch(
     error,
     cancel,
     loadMore,
-    searching: !current && !error,
+    searching: current?.requestId !== request.requestId && !error,
     selectProfile: (id: string) => {
       if (id !== profileId) {
         cancel();

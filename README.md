@@ -33,6 +33,8 @@ JXA runs through macOS's `osascript` and uses the same automation mechanism as A
 
 ### Fuzzy Pinyin search
 
+Search input is debounced. The previous results stay visible until the next search finishes, reducing flicker while typing or switching sources.
+
 Powered by [text-search-engine](https://github.com/cjinhuo/text-search-engine), fuzzy search supports mixed Chinese and English queries. More consecutive matches rank higher; equally relevant history results are ordered by most recent visit to help you locate the target quickly. Search capabilities include:
 
 - Pinyin initials and full Pinyin search, with mixed Chinese, Pinyin, and English input.

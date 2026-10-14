@@ -133,9 +133,11 @@
     "@raycast/eslint-config": "^2.2.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.0",
+    "@types/react-test-renderer": "^19.1.0",
     "eslint": "^9.39.1",
     "prettier": "^3.6.2",
     "react": "^19.2.0",
+    "react-test-renderer": "^19.2.0",
     "tsx": "^4.23.0",
     "typescript": "^5.9.3"
   },

@@ -218,6 +218,7 @@ export default function SearchBrowser() {
     <List
       isShowingDetail={detailVisible}
       filtering={false}
+      throttle={true}
       isLoading={busy}
       searchText={input}
       onSearchTextChange={(text) => {
