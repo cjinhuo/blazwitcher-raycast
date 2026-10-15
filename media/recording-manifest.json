@@ -5,7 +5,7 @@
   "source_branch": "codex/readme-store",
   "capture_commit": "e6502c5719feb7597b9ad299e4e51172d0f51a70",
   "base_commit": "24707bda0e9cdccf91440d9e3413b85702270fb8",
-  "status": "recordings_ready_local_preferences_restore_pending",
+  "status": "ready",
   "fixture_data": "11 real public Chinese AI documentation pages in 5 Chrome groups; 4 newly added bookmarks and 4 newly visited history fixtures",
   "editing": {
     "ready_recordings": "All six recordings exported at original playback speed; open-actions combines two real capture clips; no fabricated UI",
@@ -107,7 +107,7 @@
     "new_tab": "Command-Enter opened the history result 指标与 Metrics in a new tab; tab count increased from 11 to 12; the added tab was then closed and the count returned to 11",
     "preferences": {
       "change_verified": "History display count 10 -> 5; after reopening the command, /h openviking.ai showed 5 results",
-      "restore_status": "Local cleanup pending: restore history display count to 10 and reopen the command to verify",
+      "restore_status": "Verified in native UI: history display count restored from 5 to 10, field read back as 10, then reopened /h openviking.ai showed 10 public OpenViking history results; other settings unchanged",
       "unchanged": {
         "history_days": 14,
         "history_reading_limit": 2000,
@@ -120,8 +120,5 @@
       "screenshot_note": "A pre-change frame showing 10 is not evidence that the later restore succeeded"
     }
   },
-  "pending": [
-    "Restore the local test history display count to 10",
-    "Reopen the command to verify the restored local setting"
-  ]
+  "pending": []
 }
