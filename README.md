@@ -141,7 +141,7 @@ To launch the command directly, assign a hotkey or alias in Raycast Settings →
 
 ### Chrome profiles and local startup cache
 
-Open Actions → **Switch Chrome Profile** to filter bookmarks and history by a specific profile or search all profiles. Open tabs still come from all readable Chrome windows.
+Bookmarks and history initially use Chrome’s most recently used profile. Open Actions → **Switch Chrome Profile** to choose a specific profile or **All Profiles**. The choice applies to the current command session; reopening the command uses Chrome’s most recently used profile again. Open tabs always come from all readable Chrome windows, regardless of this selection.
 
 New installations read up to **1,000 history records from the last 14 days**. Adjust both values in extension preferences; the reading limit can reach **100,000**, and **0** days means all dates. The limit also applies to combined history across profiles. Existing saved preferences are retained. Incognito tabs are excluded by default and can be enabled in preferences.
 
