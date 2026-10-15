@@ -280,7 +280,7 @@ test("服务默认传递历史时间范围并在模式切换后清空旧索引�
   assert.equal(page.total, 1);
   const ref = { id: "path", requestId: 2, version: page.version };
   await service.configure(defaultBrowserOptions);
-  assert.throws(() => service.entry(ref), /结果已更新/);
+  assert.throws(() => service.entry(ref), /Results changed/);
   assert.equal((await search(3, "deep")).total, 0);
   assert.deepEqual(calls, [14, 0, 14]);
 });

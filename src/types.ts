@@ -50,7 +50,7 @@ export interface SearchResult {
 }
 
 export const sourceNames: Record<Source, string> = {
-  tab: "标签页",
-  bookmark: "书签",
-  history: "历史记录",
+  tab: "Tab",
+  bookmark: "Bookmark",
+  history: "History",
 };

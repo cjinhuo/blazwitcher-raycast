@@ -26,7 +26,7 @@ export function compactPreviewMarkdown(markdown: string) {
       return compact.replace(
         /(`+).*?\1|(?<!\\)!\[/g,
         (match: string, code: string | undefined, offset: number) =>
-          code ? match : compact[offset + 2] === "]" ? "[图片" : "[",
+          code ? match : compact[offset + 2] === "]" ? "[Image" : "[",
       );
     })
     .join("\n");
@@ -50,9 +50,9 @@ export function resultDetailMarkdown(
     sourceNames[entry.source],
     entry.profile?.name,
     entry.tabGroup?.title,
-    entry.incognito ? "无痕" : undefined,
-    entry.active ? "所在窗口的当前标签" : undefined,
-    entry.folder ? `文件夹：${entry.folder}` : undefined,
+    entry.incognito ? "Incognito" : undefined,
+    entry.active ? "Active tab in its window" : undefined,
+    entry.folder ? `Folder: ${entry.folder}` : undefined,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -69,18 +69,18 @@ export function resultDetailMarkdown(
   const body = preview.markdown
     ? compactPreviewMarkdown(preview.markdown)
     : isLoading
-      ? "正在读取正文…"
+      ? "Loading page content…"
       : preview.message;
   return [
     `### ${escapeMarkdown(displayTitle(entry.title))}`,
     `${escapeMarkdown(context)} · ${address}`,
     visited && !Number.isNaN(visited.getTime())
-      ? `最近访问：${visited.toLocaleString("zh-CN", { hour12: false })}`
+      ? `Last visited: ${visited.toLocaleString("en-US", { hour12: false })}`
       : undefined,
     "---",
     body,
     preview.truncated
-      ? "仅预览正文前 8000 字符，完整内容请在 Chrome 中查看。"
+      ? "Showing the first 8,000 characters. Open the page in Chrome to read the full content."
       : undefined,
   ]
     .filter(Boolean)

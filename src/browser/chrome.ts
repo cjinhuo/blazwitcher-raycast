@@ -60,7 +60,9 @@ function validateUrl(url: string) {
   if (
     !["http:", "https:", "file:", "chrome:", "about:"].includes(parsed.protocol)
   ) {
-    throw new Error("该地址类型不支持直接打开，请复制地址后自行处理。");
+    throw new Error(
+      "This URL type cannot be opened directly. Copy the URL and open it manually.",
+    );
   }
 }
 
@@ -76,7 +78,9 @@ export async function openCapturedUrl(
 export function openUrlArguments(entry: BrowserEntry): string[] {
   validateUrl(entry.url);
   if (!entry.profile || !isProfileId(entry.profile.id))
-    throw new Error("找不到有效的 Chrome 配置，请重新打开命令后重试。");
+    throw new Error(
+      "No valid Chrome profile was found. Reopen the command and try again.",
+    );
   return [
     "-na",
     "Google Chrome",
@@ -101,37 +105,37 @@ export async function navigateTo(entry: BrowserEntry) {
 export function describeError(error: unknown, application = "Raycast"): string {
   const message = error instanceof Error ? error.message : String(error);
   if (message.includes("-1743"))
-    return `请在系统设置 → 隐私与安全性 → 自动化中允许 ${application} 控制 Google Chrome。`;
+    return `Allow ${application} to control Google Chrome in System Settings → Privacy & Security → Automation.`;
   if (message.includes("TARGET_WINDOW_NOT_FOUND"))
-    return "命令打开时的 Chrome 窗口已关闭，请重新打开命令后重试。";
+    return "The Chrome window captured when this command opened has been closed. Reopen the command and try again.";
   if (message.includes("TARGET_TAB_NOT_FOUND"))
-    return "命令打开时的标签已关闭或移到其他窗口，请重新打开命令后重试。";
+    return "The tab captured when this command opened has been closed or moved to another window. Reopen the command and try again.";
   if (message.includes("NO_CURRENT_TAB"))
-    return "命令打开时没有当前标签页，请使用“在新标签页打开”。";
+    return "There was no active tab when this command opened. Use Open in New Tab.";
   if (message.includes("INVALID_TARGET"))
-    return "浏览器目标无效，请重新打开命令后重试。";
+    return "Invalid browser target. Reopen the command and try again.";
   if (message.includes("UNSUPPORTED_URL"))
-    return "该地址类型不支持直接打开，请复制地址后自行处理。";
+    return "This URL type cannot be opened directly. Copy the URL and open it manually.";
   if (message.includes("TAB_NOT_FOUND"))
-    return "该标签页已关闭，请重新打开命令。";
+    return "This tab has been closed. Reopen the command.";
   if (message.includes("CHROME_NOT_RUNNING"))
-    return "Chrome 当前未运行，请启动后重新打开命令。";
+    return "Chrome is not running. Start Chrome and reopen the command.";
   if (message.includes("TAB_MOVED_DURING_FOCUS"))
-    return "标签位置刚刚发生变化，请重试。";
+    return "The tab moved. Try again.";
   if (message.includes("TABS_CHANGED_DURING_READ"))
-    return "标签页正在变化，暂时无法读取稳定结果，请重新打开命令后重试。";
+    return "Chrome tabs are changing. Reopen the command and try again.";
   if (message.includes("INVALID_TAB_ID"))
-    return "标签标识无效，请重新打开命令。";
+    return "Invalid tab ID. Reopen the command.";
   if (
     /EPERM|EACCES|authorization denied|unable to open database/i.test(message)
   )
-    return `无法读取 Chrome 本地数据，请检查 ${application} 的文件访问权限。`;
+    return `Could not read local Chrome data. Check file access permissions for ${application}.`;
   if (/locked|busy/i.test(message))
-    return "Chrome 历史数据库暂时忙碌，请稍后重新打开命令。";
+    return "Chrome history database is busy. Reopen the command later.";
   if (/ENOENT/.test(message))
-    return "找不到 Chrome 配置目录，请先运行 Google Chrome。";
+    return "No Chrome profile directory was found. Start Google Chrome first.";
   if (/timed out|ETIMEDOUT|killed/.test(message))
-    return "操作 Chrome 超时，请稍后重试。";
-  if (/该地址类型|找不到有效/.test(message)) return message;
-  return "读取或操作失败，请重新打开命令后重试；可用的数据来源仍可继续搜索。";
+    return "The Chrome operation timed out. Try again later.";
+  if (/This URL type|No valid Chrome profile/.test(message)) return message;
+  return "Could not read or control Chrome. Reopen the command and try again. Available sources can still be searched.";
 }

@@ -37,7 +37,7 @@ export function useShortcuts() {
             ready: true,
             overrides: {},
             error:
-              "快捷键配置读取或保存失败，已暂停自定义快捷键。请在快捷键设置中重试。",
+              "Could not read or save shortcut settings. Custom shortcuts are disabled. Try again in Shortcut Settings.",
           });
       }
     })();

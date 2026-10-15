@@ -1,115 +1,117 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "blazwitcher-raycast",
-  "title": "Blazwitcher 拼音搜索",
-  "description": "使用拼音、首字母和中英文混合搜索 Chrome 标签页、书签与历史记录，单栏展示并快速跳转。",
+  "title": "Blazwitcher",
+  "description": "Search Chrome tabs, bookmarks, and history with Chinese, Pinyin, initials, and English.",
   "icon": "extension-icon.png",
-  "author": "cjinhuo",
+  "author": "julian0197",
   "license": "MIT",
   "platforms": [
     "macOS"
   ],
   "categories": [
     "Productivity",
-    "Navigation"
+    "Web"
   ],
   "commands": [
     {
       "name": "search-all",
-      "title": "搜索浏览器",
+      "title": "Search Browser",
       "subtitle": "Blazwitcher",
-      "description": "统一拼音搜索 Chrome 标签页、书签和历史记录",
+      "description": "Search Chrome tabs, bookmarks, and history with fuzzy Pinyin matching.",
       "mode": "view",
       "keywords": [
         "chrome",
         "pinyin",
         "blazwitcher",
-        "搜索"
+        "tabs",
+        "bookmarks",
+        "history"
       ]
     }
   ],
   "preferences": [
     {
       "name": "searchStrategy",
-      "title": "搜索方式",
-      "description": "默认按 Chrome Blaz 的标题与域名匹配和排序。完整网址模式可搜索路径、参数与片段，并保留标题优先排序。",
+      "title": "Search Mode",
+      "description": "Match titles and domains using the Blazwitcher Chrome extension's ranking. Full URL Search also includes paths, query parameters, and fragments, while keeping title matches first.",
       "type": "dropdown",
       "default": "chrome",
       "required": false,
       "data": [
         {
-          "title": "与 Chrome Blaz 一致",
+          "title": "Match Chrome Blaz",
           "value": "chrome"
         },
         {
-          "title": "完整网址搜索",
+          "title": "Full URL Search",
           "value": "full-url"
         }
       ]
     },
     {
       "name": "historyDays",
-      "title": "历史记录时间范围（天）",
-      "description": "默认最近 14 天，与 Chrome Blaz 一致；填 0 可读取不限日期的历史。",
+      "title": "History Date Range (Days)",
+      "description": "Read the last 14 days by default, matching the Blazwitcher Chrome extension. Enter 0 to include all dates.",
       "type": "textfield",
       "default": "14",
       "required": false
     },
     {
       "name": "historyLimit",
-      "title": "历史记录读取上限",
-      "description": "按最近访问排序读取的条数，默认 1000，与 Chrome Blaz 一致；上限 100000。",
+      "title": "History Reading Limit",
+      "description": "Read the most recently visited records first. The default is 1,000, matching the Blazwitcher Chrome extension. Maximum: 100,000.",
       "type": "textfield",
       "default": "1000",
       "required": false
     },
     {
       "name": "historyDisplayCount",
-      "title": "历史记录显示数量",
-      "description": "每次搜索最多显示的历史结果，包含进入最优建议的历史；范围 1–20，默认 10。",
+      "title": "History Result Count",
+      "description": "Maximum history results per search, including Top Suggestions. Range: 1–20. Default: 10.",
       "type": "textfield",
       "default": "10",
       "required": false
     },
     {
       "name": "bookmarkDisplayCount",
-      "title": "书签显示数量",
-      "description": "每次搜索最多显示的书签结果，包含进入最优建议的书签；范围 1–20，默认 10。",
+      "title": "Bookmark Result Count",
+      "description": "Maximum bookmark results per search, including Top Suggestions. Range: 1–20. Default: 10.",
       "type": "textfield",
       "default": "10",
       "required": false
     },
     {
       "name": "topSuggestionsCount",
-      "title": "最优建议数量",
-      "description": "输入关键词后，把排序最靠前的结果放到最优建议；范围 1–10，默认 2。不会额外增加结果。",
+      "title": "Top Suggestions",
+      "description": "Move the highest-ranked matches into Top Suggestions when a query is entered. Range: 1–10. Default: 2. This does not add results.",
       "type": "textfield",
       "default": "2",
       "required": false
     },
     {
       "name": "enableConsecutiveSearch",
-      "title": "严格搜索（英文连续匹配）",
-      "label": "英文字符必须连续命中",
-      "description": "默认关闭。开启后 rct 不再匹配 React；中文仍支持拼音与首字母。",
+      "title": "Strict Search (Consecutive English Matches)",
+      "label": "Require consecutive English-character matches",
+      "description": "Off by default. When enabled, rct no longer matches React. Chinese Pinyin and initials are still supported.",
       "type": "checkbox",
       "default": false,
       "required": false
     },
     {
       "name": "startupPreview",
-      "title": "启动预览缓存",
-      "label": "优先显示上次结果，再读取完整数据",
-      "description": "每个 Chrome 配置最多缓存 100 条书签和 100 条历史，有效期 5 分钟，仅存于本机；不缓存标签页或无痕数据。关闭后不再使用缓存。",
+      "title": "Startup Cache",
+      "label": "Show cached results while fresh data loads",
+      "description": "Cache up to 100 bookmarks and 100 history records per Chrome profile locally for five minutes. Tabs and incognito data are excluded. Disable to stop using the cache.",
       "type": "checkbox",
       "default": true,
       "required": false
     },
     {
       "name": "includeIncognito",
-      "title": "无痕标签页",
-      "label": "包含无痕窗口中的标签页",
-      "description": "只在内存中读取；不会写入历史记录或缓存。",
+      "title": "Incognito Tabs",
+      "label": "Include tabs from incognito windows",
+      "description": "Read incognito tabs in memory only. They are never written to history or the startup cache.",
       "type": "checkbox",
       "default": false,
       "required": false
@@ -118,15 +120,17 @@
   "scripts": {
     "dev": "ray develop",
     "build": "ray build -e dist",
-    "lint": "eslint . && prettier --check .",
+    "lint": "ray lint && eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run lint && npm run build",
-    "test:local": "tsx scripts/inspect-local.ts"
+    "test:local": "tsx scripts/inspect-local.ts",
+    "publish": "npx @raycast/api@latest publish",
+    "prepublishOnly": "node -e \"console.error('Publish this extension through the Raycast CLI. Use npm run publish instead of npm publish.'); process.exit(1)\""
   },
   "dependencies": {
-    "@raycast/api": "^2.5.2",
+    "@raycast/api": "^2.8.0",
     "text-search-engine": "1.6.0"
   },
   "devDependencies": {

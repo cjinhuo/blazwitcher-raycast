@@ -242,7 +242,7 @@ test("标签脚本使用 JSON 保留特殊标题，无痕默认不读", () => {
 test("错误提示不泄漏命令文本或私人 URL", () => {
   assert.ok(
     describeError(new Error("Command failed: private-url -1743")).includes(
-      "自动化",
+      "Automation",
     ),
   );
   assert.ok(

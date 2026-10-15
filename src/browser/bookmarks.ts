@@ -23,7 +23,7 @@ export function parseBookmarks(
     !raw.roots ||
     typeof raw.roots !== "object"
   ) {
-    throw new Error("书签文件格式无效");
+    throw new Error("Invalid bookmark file format");
   }
   const entries: BrowserEntry[] = [];
   function visit(node: BookmarkNode, folders: string[]) {
@@ -66,7 +66,7 @@ export async function readBookmarks(
       }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT")
-        warnings.push(`${profile.name}：${file} 读取失败`);
+        warnings.push(`${profile.name}: Could not read ${file}`);
     }
   }
   return { entries, warnings };

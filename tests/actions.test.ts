@@ -79,7 +79,7 @@ test("等待捕获期间结果失效时拒绝操作", async () => {
   const operation = executeResultAction(
     "newTab",
     () => {
-      if (!live) throw new Error("结果已更新");
+      if (!live) throw new Error("Results changed");
       return entry;
     },
     pending,
@@ -87,7 +87,7 @@ test("等待捕获期间结果失效时拒绝操作", async () => {
   );
   live = false;
   release({ context: null });
-  await assert.rejects(operation, /结果已更新/);
+  await assert.rejects(operation, /Results changed/);
   assert.deepEqual(calls, []);
 });
 

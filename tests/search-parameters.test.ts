@@ -174,7 +174,7 @@ test("同查询修改数量或严格开关后立即生效，旧引用失效且�
     historyDisplayCount: 20,
   });
   assert.equal((await search(2, "rct")).total, 20);
-  assert.throws(() => service.entry(ref), /结果已更新/);
+  assert.throws(() => service.entry(ref), /Results changed/);
   assert.equal(historyReads, 1);
   await service.configure({
     ...defaultBrowserOptions,

@@ -49,12 +49,12 @@ export function ShortcutSettings({
     setSaving(true);
     try {
       await onSave(next);
-      await showToast({ style: Toast.Style.Success, title: "快捷键已保存" });
+      await showToast({ style: Toast.Style.Success, title: "Shortcuts Saved" });
       pop();
     } catch {
       await showToast({
         style: Toast.Style.Failure,
-        title: "快捷键保存失败，请重试",
+        title: "Could Not Save Shortcuts",
       });
     } finally {
       savingRef.current = false;
@@ -84,17 +84,17 @@ export function ShortcutSettings({
   };
   return (
     <Form
-      navigationTitle="快捷键设置"
+      navigationTitle="Shortcut Settings"
       isLoading={saving}
       actions={
         <ActionPanel>
           <Action.SubmitForm
-            title="保存快捷键"
+            title="Save Shortcuts"
             icon={Icon.Checkmark}
             onSubmit={save}
           />
           <Action
-            title="恢复默认快捷键"
+            title="Restore Default Shortcuts"
             icon={Icon.ArrowCounterClockwise}
             onAction={() => persist({})}
           />
@@ -102,12 +102,15 @@ export function ShortcutSettings({
       }
     >
       <Form.Description
-        title="设置说明"
-        text="输入 cmd+shift+1、ctrl+o、shift+enter 等组合；留空停用该动作的额外绑定。支持的菜单动作始终保留。第一、第二个结果动作仍由 Raycast 提供 Enter / ⌘Enter，无法在此停用；自定义键仅作为额外绑定。"
+        title="Instructions"
+        text="Enter a combination such as cmd+shift+1, ctrl+o, or shift+enter. Leave a field blank to disable its additional shortcut. Actions remain available in the menu. Raycast always assigns Enter and ⌘Enter to the first two result actions; custom shortcuts are additional bindings."
       />
-      {error && <Form.Description title="配置状态" text={error} />}
+      {error && <Form.Description title="Configuration Status" text={error} />}
       {errors.length > 0 && (
-        <Form.Description title="请修改" text={errors.join("\n")} />
+        <Form.Description
+          title="Fix These Shortcuts"
+          text={errors.join("\n")}
+        />
       )}
       {(["common", "tab", "bookmark", "history"] as const).map((group) => (
         <Fragment key={group}>
@@ -115,13 +118,13 @@ export function ShortcutSettings({
           <Form.Description
             title={
               {
-                common: "通用",
-                tab: "标签页",
-                bookmark: "书签",
-                history: "历史记录",
+                common: "General",
+                tab: "Tabs",
+                bookmark: "Bookmarks",
+                history: "History",
               }[group]
             }
-            text="以下动作可分别设置快捷键。"
+            text="Set a shortcut for each action below."
           />
           {actionDefinitions
             .filter(
@@ -137,10 +140,10 @@ export function ShortcutSettings({
                 value={values[action.id]}
                 placeholder={
                   action.id === "newTab"
-                    ? "宿主 ⌘Enter；可添加其他组合"
+                    ? "Raycast uses ⌘Enter; add another shortcut"
                     : action.id.endsWith(".open")
-                      ? "宿主 Enter；可添加其他组合"
-                      : "留空停用额外绑定"
+                      ? "Raycast uses Enter; add another shortcut"
+                      : "Leave blank to disable the additional shortcut"
                 }
                 onChange={(value) => {
                   setValues((previous) => ({
