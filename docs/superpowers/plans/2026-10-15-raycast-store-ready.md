@@ -2,7 +2,7 @@
 
 > **For agentic workers:** Use subagent-driven implementation with separate UI copy, browser messages, and release metadata responsibilities. Parent verifies integration and captures native screenshots.
 
-**Goal:** Prepare Blazwitcher for Raycast Store submission under julian0197 with English controls and real Store screenshots.
+**Goal:** Submit Blazwitcher to the official Raycast Store review under julian0197 with English controls, real Store screenshots, and refreshed bilingual demos. The user has authorized the official submission; current delivery status is pending submission. Store publication remains dependent on the official review and merge.
 
 **Architecture:** Keep current search, data access, preferences keys, keyboard bindings, and privacy boundaries. Translate user-facing text directly; keep Chinese page titles and Pinyin search fixtures unchanged. Use the official Raycast CLI and Window Capture rather than adding a localization layer or screenshot compositor.
 
@@ -44,13 +44,23 @@ Files: package.json, package-lock.json, CHANGELOG.md, AGENTS.md, README.md, READ
 
 Files: metadata/blazwitcher-raycast-1.png, metadata/blazwitcher-raycast-2.png, metadata/blazwitcher-raycast-3.png.
 
-- [ ] Launch the new developer command and verify it is the English julian0197 extension.
-- [ ] Keep raycast-blaz demo pages; screenshot `/t sxw` multiple Chinese-title matches, bookmark-only `/b zhishi zl`, and expanded page-body preview.
-- [ ] Use native Window Capture, Save to Metadata, consistent background and theme. Verify each real PNG is 2000x1250 and contains no other applications or private data.
+- [x] Launch the new developer command and verify it is the English julian0197 extension.
+- [x] Prepare raycast-blaz with 15 public tabs in 6 groups, including Chinese AI documents, English Agent / Skills projects, bookmarks and history.
+- [x] Record six demos in the English interface: Pinyin search, English project-keyword search, domain search, source filters, page-body preview and search preferences. Verify `/t skills` has 3 results and `/t skills openai` has 2, with openai/skills first.
+- [x] Capture `/t sxw` with 4 results using native Capture Window and Save to Metadata; verify the first PNG is 2000x1250.
+- [x] Finish the English Skills and expanded page-preview Store screenshots with the same lake background.
+- [x] Export and inspect all six GIF/MP4 demos, then update the recording manifest with current evidence; all 12 files decode successfully and match the reviewed exports.
+- [x] Use native Window Capture, Save to Metadata, consistent background and theme. Verify all three real PNGs are 2000x1250 and contain no other applications or private data.
 
 ## Task 5: Verification and delivery
 
 - [x] Run Node 22.22.2 typecheck and 127 tests; pass official Raycast lint, ESLint, Prettier and build after formatting the plan.
-- [ ] Verify real search, source change, preview and an existing-tab action in Raycast/Chrome.
+- [x] Verify real Pinyin/English search, source changes and page preview in Raycast.
+- [x] Record History Result Count changing from 10 to 5 and back to 10; confirm the restored setting. This recording does not recheck the result count after reopening the command.
+- [x] Remove the older open-actions clip from the current README and gallery. Existing-tab and new-tab actions have earlier-version verification only; no fresh Enter/Command-Enter acceptance is claimed for this round, and rerecording this optional demo is not a submission blocker.
 - [ ] Check English UI literals, links, manifests, public registry lock URLs, screenshots and staged scope.
-- [ ] Commit and push codex/store-ready; create and attach a PR to cjinhuo/blazwitcher-raycast. Do not run the final official Store publishing command as part of this preparation PR.
+- [x] Commit and push the English interface and release configuration; create and attach preparation PR #18 to cjinhuo/blazwitcher-raycast.
+- [ ] Commit the refreshed media and docs, push codex/store-ready, and update PR #18 with final verification.
+- [ ] Sync a clean publishing checkout to the final commit and verify that no local diagnostics or credentials will be copied.
+- [ ] Run interactive `npm run publish`, complete the official GitHub authorization flow, inspect the generated raycast/extensions draft PR, and mark it Ready for review.
+- [ ] Attach and verify the official PR URL, head commit, changed files and review state. Report submitted for review; only the official merge establishes Store publication.

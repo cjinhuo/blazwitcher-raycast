@@ -31,8 +31,6 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 ## 功能
 
-此前录制的演示使用中文界面；当前版本的界面控件采用美式英语。
-
 ### 模糊拼音搜索
 
 搜索输入采用防抖处理，等待新结果时保留上一页，减少连续输入和切换来源时的列表闪烁。
@@ -50,6 +48,12 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 [观看拼音搜索录屏（MP4）](media/pinyin-search.mp4)。
 
+英文搜索也可以逐步细化。在这组演示中，`/t skills` 找到 3 个标题相近的标签；加上项目关键词，输入 `/t skills openai` 后缩小到 2 个结果，**openai/skills** 排在首位。结合列表里的 GitHub 标题和网址，可以直观看出命中的项目。
+
+![用英文项目关键词缩小相近 Skills 标签的搜索范围](media/english-search.gif)
+
+[观看英文搜索录屏（MP4）](media/english-search.mp4)。
+
 从 `kuaisu` 到 `kuaisu rm` 逐步缩小范围，再加上 `claude.com` 找到**快速入门 - Claude Code Docs**；换成 `rm claude.com kuaisu` 也能找到同一页。
 
 ![组合域名与空格分词，搜索顺序无关的关键词](media/domain-search.gif)
@@ -66,7 +70,7 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 部分已有标签可能连接失败，动态网页的正文可能不完整。浏览器扩展能力不可用时会隐藏预览入口。具体限制见 [详情预览说明](docs/详情预览试用说明.md)。
 
-![展开、滚动和收起网页正文预览](media/page-preview.gif)
+![按 ⌘D 展开已提取的网页正文](media/page-preview.gif)
 
 [观看网页预览录屏（MP4）](media/page-preview.mp4)。
 
@@ -109,9 +113,7 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 ![Raycast 搜索参数设置](media/search-settings.png)
 
-图中读取上限 **2,000** 是已有用户保存的值；新安装默认 **1,000**。
-
-![修改搜索配置并验证生效](media/search-settings.gif)
+![调整历史显示数量并恢复为 10](media/search-settings.gif)
 
 ### 准确切换和打开页面
 
@@ -119,7 +121,7 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 也可以将任意结果打开到新标签页，或替换启动命令时正在使用的标签页。这两种操作沿用启动时捕获的 Chrome 目标；目标已关闭或失效时会提示失败，避免打开到其他标签。
 
-![切换已有标签与新标签打开](media/open-actions.gif)
+按 `⌘Enter` 在新标签页打开，按 `⇧Enter` 在启动时的当前标签页打开。完整操作见下方快捷键表。
 
 ### 键盘操作与自定义快捷键
 

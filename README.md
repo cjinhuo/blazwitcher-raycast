@@ -31,8 +31,6 @@ JXA runs through macOS's `osascript` and uses the same automation mechanism as A
 
 ## Features
 
-Earlier demo recordings use Chinese interface labels; the current extension uses US English.
-
 ### Fuzzy Pinyin search
 
 Search input is debounced. The previous results stay visible until the next search finishes, reducing flicker while typing or switching sources.
@@ -50,6 +48,12 @@ Start with `sxw` to find several “上下文” pages, then use `sxwcj` for **�
 
 [Watch the Pinyin-search recording (MP4)](media/pinyin-search.mp4).
 
+English searches work the same way. In this demo, `/t skills` finds three tabs with similar titles. Add the project name with `/t skills openai` to narrow the list to two results, with **openai/skills** ranked first. The GitHub title and URL make the matching project easy to identify.
+
+![Refine similar Skills tabs with an English project keyword](media/english-search.gif)
+
+[Watch the English-search recording (MP4)](media/english-search.mp4).
+
 Refine `kuaisu` to `kuaisu rm`, then add `claude.com` to find **快速入门 - Claude Code Docs**. Reordering the query to `rm claude.com kuaisu` finds the same page.
 
 ![Search a domain with space-separated words in any order](media/domain-search.gif)
@@ -66,7 +70,7 @@ For ordinary HTTP(S) tabs, the panel can display the page's extracted Markdown. 
 
 Some existing tabs may fail to connect, and dynamic pages may produce incomplete content. The preview entry is hidden when the browser-extension capability is unavailable. See the [preview notes](docs/详情预览试用说明.md) for known limitations.
 
-![Expand, scroll, and collapse the page preview](media/page-preview.gif)
+![Open the extracted page-content preview with Command-D](media/page-preview.gif)
 
 [Watch the page-preview recording (MP4)](media/page-preview.mp4).
 
@@ -109,9 +113,7 @@ Existing saved preferences are preserved. Raycast and the Chrome edition save th
 
 ![Raycast search preferences](media/search-settings.png)
 
-The screenshot shows an existing user's reading limit of **2,000**; the default for a new installation is **1,000**.
-
-![Change search preferences and verify the result](media/search-settings.gif)
+![Adjust the history result count and restore it to 10](media/search-settings.gif)
 
 ### Open the page you mean
 
@@ -119,7 +121,7 @@ Press `Enter` on a tab to focus that exact tab. For a bookmark or history result
 
 You can also open any result in a new tab or in the tab that was active when you launched the command. These actions retain the captured Chrome target; if it is no longer available, the extension reports the failure rather than choosing another tab.
 
-![Focus an existing tab and open a new tab](media/open-actions.gif)
+Use `⌘Enter` for a new tab or `⇧Enter` for the captured current tab. See the shortcut table below for all keyboard actions.
 
 ### Keyboard control and custom shortcuts
 
