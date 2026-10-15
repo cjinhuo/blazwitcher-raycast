@@ -42,6 +42,18 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 默认搜索标题与域名，匹配与排序规则沿用 [Blazwitcher Chrome 插件](https://chromewebstore.google.com/detail/blazwitcher-search-and-sw/fjgablnemienkegdnbihhemebmmonihg)（[GitHub 源码](https://github.com/cjinhuo/blazwitcher)）。这项设置名为**与 Chrome Blaz 一致**，“Chrome Blaz”指的就是 Blazwitcher 浏览器版。需要搜索网址路径、查询参数或片段时，在扩展设置中选择**完整网址搜索**，这个模式也保留标题优先排序。
 
+先用 `sxw` 找到多篇“上下文”文档，再输入 `sxwcj` 定位**上下文层级**，或用 `sxwlx` 找到**上下文类型**。
+
+![用拼音首字母逐步缩小中文标题的匹配范围](media/pinyin-search.gif)
+
+[观看拼音搜索录屏（MP4）](media/pinyin-search.mp4)。
+
+从 `kuaisu` 到 `kuaisu rm` 逐步缩小范围，再加上 `claude.com` 找到**快速入门 - Claude Code Docs**；换成 `rm claude.com kuaisu` 也能找到同一页。
+
+![组合域名与空格分词，搜索顺序无关的关键词](media/domain-search.gif)
+
+[观看域名与分词搜索录屏（MP4）](media/domain-search.mp4)。
+
 ### `⌘D` 网页预览
 
 安装并启用官方 [Raycast Browser Extension](https://www.raycast.com/browser-extension) 后，预览入口才会出现。选中结果后按 `⌘D`，或通过动作菜单 → **展开预览** 打开原生右侧面板。每次进入搜索命令都默认收起。

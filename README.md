@@ -42,6 +42,18 @@ Powered by [text-search-engine](https://github.com/cjinhuo/text-search-engine), 
 
 By default, it searches titles and domains using the matching and ranking rules of the [Blazwitcher Chrome extension](https://chromewebstore.google.com/detail/blazwitcher-search-and-sw/fjgablnemienkegdnbihhemebmmonihg) ([GitHub source](https://github.com/cjinhuo/blazwitcher)). This mode appears as **与 Chrome Blaz 一致** (Match Chrome Blaz) in preferences; "Chrome Blaz" refers to the Blazwitcher browser edition. To search URL paths, query parameters, or fragments, select **完整网址搜索** (Full URL Search), which also retains title-first ranking.
 
+Start with `sxw` to find several “上下文” pages, then use `sxwcj` for **上下文层级** or `sxwlx` for **上下文类型**.
+
+![Narrow down Chinese titles with Pinyin initials](media/pinyin-search.gif)
+
+[Watch the Pinyin-search recording (MP4)](media/pinyin-search.mp4).
+
+Refine `kuaisu` to `kuaisu rm`, then add `claude.com` to find **快速入门 - Claude Code Docs**. Reordering the query to `rm claude.com kuaisu` finds the same page.
+
+![Search a domain with space-separated words in any order](media/domain-search.gif)
+
+[Watch the domain and word-search recording (MP4)](media/domain-search.mp4).
+
 ### `⌘D` page preview
 
 Install and enable the official [Raycast Browser Extension](https://www.raycast.com/browser-extension) to make the preview available. Select a result and press `⌘D`, or choose **展开预览** (Expand Preview) in Actions, to show the native detail panel. It starts collapsed each time you open the command.
