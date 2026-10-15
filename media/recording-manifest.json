@@ -1,0 +1,124 @@
+{
+  "capture_date": "2026-10-15",
+  "profile": "raycast-blaz",
+  "profile_id": "Profile 3",
+  "source_branch": "codex/readme-store",
+  "capture_commit": "e6502c5719feb7597b9ad299e4e51172d0f51a70",
+  "base_commit": "24707bda0e9cdccf91440d9e3413b85702270fb8",
+  "status": "ready",
+  "fixture_data": "11 real public Chinese AI documentation pages in 5 Chrome groups; 4 newly added bookmarks and 4 newly visited history fixtures",
+  "editing": {
+    "ready_recordings": "All six recordings exported at original playback speed; open-actions combines two real capture clips; no fabricated UI",
+    "search_settings": {
+      "retained_source_ranges_seconds": [
+        [8, 13.2],
+        [19.5, 24]
+      ],
+      "content": "Settings change from 10 to 5, followed by the reopened command with 5 stable history results",
+      "excluded": "The entire Raycast root command file list was removed",
+      "layout": "Two real windows scaled proportionally and padded onto a 780x770 canvas",
+      "speed_changes": false
+    }
+  },
+  "recordings": [
+    "pinyin-search",
+    "domain-search",
+    "source-filters",
+    "page-preview",
+    "open-actions",
+    "search-settings"
+  ],
+  "recording_status": {
+    "pinyin-search": "ready",
+    "domain-search": "ready",
+    "source-filters": "ready",
+    "page-preview": "ready",
+    "open-actions": "ready",
+    "search-settings": "ready"
+  },
+  "export_checks": {
+    "file_count": 12,
+    "gif_count": 6,
+    "mp4_count": 6,
+    "decode": "all_12_passed",
+    "review": "Contact-sheet review passed for all six recordings; the final search-settings export was also inspected"
+  },
+  "native_checks": {
+    "pinyin": [
+      {
+        "query": "/t sxw",
+        "result_count": 4,
+        "description": "Context type, layers, extraction and compilation overview"
+      },
+      {
+        "query": "/t sxwcj",
+        "result_count": 1,
+        "description": "上下文层级"
+      },
+      {
+        "query": "/t sxw",
+        "result_count": 4
+      },
+      {
+        "query": "/t sxwlx",
+        "result_count": 1,
+        "description": "上下文类型"
+      }
+    ],
+    "domain_and_unordered_words": [
+      {
+        "query": "/t kuaisu",
+        "result_count": 3
+      },
+      {
+        "query": "/t kuaisu rm",
+        "result_count": 2
+      },
+      {
+        "query": "/t kuaisu rm claude.com",
+        "result_count": 1,
+        "description": "快速入门 - Claude Code Docs"
+      },
+      {
+        "query": "/t rm claude.com kuaisu",
+        "result_count": 1,
+        "description": "The same Claude quickstart page"
+      }
+    ],
+    "sources": [
+      {
+        "query": "/t sxwcj",
+        "result_count": 1,
+        "description": "上下文层级"
+      },
+      {
+        "query": "/h openviking.ai zhibiao",
+        "result_count": 1,
+        "description": "指标与 Metrics"
+      },
+      {
+        "query": "/b zhishi zl",
+        "result_count": 1,
+        "description": "示例：知识蒸馏"
+      }
+    ],
+    "page_preview": "With the official Raycast Browser Extension enabled, Command-D displayed extracted page text and a table; scrolling and collapse were recorded",
+    "existing_tab": "Enter switched from 检索机制 to the existing 上下文层级 tab; tab count remained 11",
+    "new_tab": "Command-Enter opened the history result 指标与 Metrics in a new tab; tab count increased from 11 to 12; the added tab was then closed and the count returned to 11",
+    "preferences": {
+      "change_verified": "History display count 10 -> 5; after reopening the command, /h openviking.ai showed 5 results",
+      "restore_status": "Verified in native UI: history display count restored from 5 to 10, field read back as 10, then reopened /h openviking.ai showed 10 public OpenViking history results; other settings unchanged",
+      "unchanged": {
+        "history_days": 14,
+        "history_reading_limit": 2000,
+        "bookmark_display_count": 10,
+        "top_suggestions_count": 2,
+        "strict_search": false,
+        "startup_cache": true,
+        "incognito": false
+      },
+      "screenshot_note": "A pre-change frame showing 10 is not evidence that the later restore succeeded"
+    }
+  },
+  "pending": []
+}
