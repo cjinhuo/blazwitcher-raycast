@@ -66,7 +66,7 @@ test("书签、历史、无痕和特殊协议预览不访问浏览器扩展", as
 test("扩展不可用时保留基础信息，不调用读取 API", async () => {
   assert.match(
     (await preview(entry, client({ isAvailable: () => false }))).message!,
-    /安装并连接/,
+    /Install and connect/,
   );
 });
 
@@ -91,7 +91,7 @@ test("标签消失、重复 ID 或 URL 不同都拒绝读取正文", async () =>
         },
       }),
     );
-    assert.match(result.message!, /已关闭或地址发生变化/);
+    assert.match(result.message!, /closed or its URL changed/);
     assert.equal(reads, 0);
   }
 });
@@ -110,7 +110,7 @@ test("读取过程中导航到其他 URL，不发布旧正文", async () => {
     }),
   );
   assert.equal(result.markdown, undefined);
-  assert.match(result.message!, /地址发生变化/);
+  assert.match(result.message!, /URL changed/);
 });
 
 test("取消后的正文不发布，也不继续核对浏览器标签", async () => {
@@ -137,7 +137,7 @@ test("取消后的正文不发布，也不继续核对浏览器标签", async ()
 test("空正文、过长正文和扩展连接错误提供有限输出", async () => {
   assert.match(
     (await preview(entry, client({ getContent: async () => "  " }))).message!,
-    /未提取到正文/,
+    /No page content was extracted/,
   );
   const long = await preview(
     entry,
@@ -157,7 +157,7 @@ test("空正文、过长正文和扩展连接错误提供有限输出", async ()
         },
       }),
     );
-    assert.match(result.message!, /尚未连接/);
+    assert.match(result.message!, /not connected/);
   }
   const failed = await preview(
     entry,
@@ -167,7 +167,7 @@ test("空正文、过长正文和扩展连接错误提供有限输出", async ()
       },
     }),
   );
-  assert.match(failed.message!, /读取失败/);
+  assert.match(failed.message!, /Could not read page content/);
   assert.ok(!failed.message?.includes("private-url"));
 });
 
@@ -189,7 +189,7 @@ test("正文超时后不继续发起读取", async (t) => {
     }),
   );
   t.mock.timers.tick(6000);
-  assert.match((await pending).message!, /超时/);
+  assert.match((await pending).message!, /timed out/);
   resolveTabs([{ id: 17, url: entry.url }]);
   await Promise.resolve();
   await Promise.resolve();

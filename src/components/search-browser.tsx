@@ -36,7 +36,12 @@ import {
   type Source,
 } from "../types";
 
-const scopeNames: Record<Scope, string> = { all: "全部来源", ...sourceNames };
+const scopeNames: Record<Scope, string> = {
+  all: "All Sources",
+  tab: "Open Tabs",
+  bookmark: "Bookmarks",
+  history: "History",
+};
 
 export default function SearchBrowser() {
   const [captured] = useState<CapturedContext>(() =>
@@ -45,17 +50,7 @@ export default function SearchBrowser() {
       (error: unknown) => ({ error }),
     ),
   );
-  const preferences = getPreferenceValues<{
-    historyLimit?: string;
-    includeIncognito?: boolean;
-    startupPreview?: boolean;
-    searchStrategy?: string;
-    historyDays?: string;
-    historyDisplayCount?: string;
-    bookmarkDisplayCount?: string;
-    topSuggestionsCount?: string;
-    enableConsecutiveSearch?: boolean;
-  }>();
+  const preferences = getPreferenceValues<Preferences>();
   const options = useMemo(
     () => ({
       scope: "all" as const,
@@ -120,7 +115,7 @@ export default function SearchBrowser() {
   const warnings = Object.entries(snapshot?.states ?? {}).flatMap(
     ([source, status]) =>
       status.warnings.map(
-        (warning) => `${sourceNames[source as Source]}：${warning}`,
+        (warning) => `${sourceNames[source as Source]}: ${warning}`,
       ),
   );
   if (state.error) warnings.push(state.error);
@@ -138,7 +133,8 @@ export default function SearchBrowser() {
 
   const actions = (result?: SearchResult) => {
     const resolve = () => {
-      if (!page || !result) throw new Error("结果已更新，请重新选择。");
+      if (!page || !result)
+        throw new Error("Results changed. Select a result again.");
       return state.service.entry({
         id: result.entry.id,
         requestId: page.requestId,
@@ -157,14 +153,14 @@ export default function SearchBrowser() {
           detailAvailable && (
             <>
               <Action
-                title={detailVisible ? "收起预览" : "展开预览"}
+                title={detailVisible ? "Collapse Preview" : "Expand Preview"}
                 icon={Icon.Sidebar}
                 shortcut={raycastShortcut(shortcuts.bindings.toggleDetail)}
                 onAction={() => setShowDetail((value) => !value)}
               />
               {detailVisible && result?.entry.source === "tab" && (
                 <Action
-                  title="刷新预览"
+                  title="Refresh Preview"
                   icon={Icon.ArrowClockwise}
                   onAction={preview.refresh}
                 />
@@ -173,9 +169,9 @@ export default function SearchBrowser() {
           )
         }
       >
-        <ActionPanel.Submenu title="切换 Chrome 配置" icon={Icon.Person}>
+        <ActionPanel.Submenu title="Switch Chrome Profile" icon={Icon.Person}>
           <Action
-            title="全部配置"
+            title="All Profiles"
             onAction={() => state.selectProfile("all")}
           />
           {snapshot?.profiles.map((profile) => (
@@ -190,13 +186,15 @@ export default function SearchBrowser() {
           ))}
         </ActionPanel.Submenu>
         <Action
-          title="清除启动缓存"
+          title="Clear Startup Cache"
           icon={Icon.Trash}
           onAction={async () => {
             const cleared = state.service.clearPreviewCache();
             await showToast({
               style: cleared ? Toast.Style.Success : Toast.Style.Failure,
-              title: cleared ? "已清除启动缓存" : "清除启动缓存失败，请重试",
+              title: cleared
+                ? "Startup Cache Cleared"
+                : "Could Not Clear Startup Cache",
             });
           }}
         />
@@ -212,8 +210,8 @@ export default function SearchBrowser() {
       )
     : [];
   const resultSummary = page
-    ? `${page.total.toLocaleString()} 个结果${cached ? " · 缓存预览" : ""}`
-    : "正在搜索…";
+    ? `${page.total.toLocaleString("en-US")} ${page.total === 1 ? "result" : "results"}${cached ? " · Cached preview" : ""}`
+    : "Searching…";
   return (
     <List
       isShowingDetail={detailVisible}
@@ -229,13 +227,11 @@ export default function SearchBrowser() {
         setSelectedId(undefined);
         setInput(text);
       }}
-      selectedItemId={activeId}
       onSelectionChange={setSelectedId}
-      searchBarPlaceholder="搜索标签页、书签和历史记录，支持拼音与首字母…"
-      navigationTitle="Blazwitcher · 搜索浏览器"
+      searchBarPlaceholder="Search tabs, bookmarks, and history with Pinyin…"
       searchBarAccessory={
         <List.Dropdown
-          tooltip="搜索来源"
+          tooltip="Search Sources"
           value={query.scope}
           onChange={(value) => selectScope(value as Scope)}
         >
@@ -256,7 +252,7 @@ export default function SearchBrowser() {
           title={section.title}
           subtitle={
             index === 0
-              ? `${resultSummary}${cached ? " · 正在读取完整数据" : ""}`
+              ? `${resultSummary}${cached ? " · Loading full data" : ""}`
               : undefined
           }
         >
@@ -281,7 +277,7 @@ export default function SearchBrowser() {
         </List.Section>
       ))}
       {warnings.length > 0 && (
-        <List.Section title="来源状态">
+        <List.Section title="Source Status">
           {warnings.map((warning) => (
             <List.Item
               key={warning}
@@ -293,8 +289,8 @@ export default function SearchBrowser() {
         </List.Section>
       )}
       <List.EmptyView
-        title={busy ? "正在读取浏览器数据…" : "没有找到匹配结果"}
-        description="试试中文、完整拼音、首字母或网址。"
+        title={busy ? "Loading browser data…" : "No Matching Results"}
+        description="Try Chinese, full Pinyin, initials, or a URL."
         icon={Icon.MagnifyingGlass}
         actions={actions()}
       />

@@ -6,7 +6,7 @@
 
 ## 工作方式
 
-- 说明、设计、注释和界面文案使用中文；代码标识符及 OpenSpec 必需关键字保留英文。
+- 协作说明、设计和注释可使用中文，README 保留中英文版本；面向用户的命令、设置、动作、状态和错误文案统一使用美式英语，以符合 Raycast Store 要求。中文网页标题和中文／拼音搜索输入保留原样，不引入多语言框架。
 - 当前方案见 `docs/实施计划.md`，证据见 `docs/验证记录.md`。
 - 不修改相邻参考仓库，不修改 Raycast 安装包或私有数据库。未经要求，不提交、推送或发布。
 - 保持默认单栏，不启动独立浮窗。2026-09-30 用户确认允许主动展开原生右侧详情；详情只在本次命令中保留开关状态。历史实现保存在 `.local/rejected-desktop/`，不属于当前构建。
@@ -14,7 +14,7 @@
 
 ## 实现约定
 
-- 使用 TypeScript、React、Raycast API、npm 和锁文件，仅保留“搜索浏览器”一个 `view` 命令。
+- 使用 TypeScript、React、Raycast API、npm 和锁文件，仅保留“Search Browser”一个 `view` 命令。
 - 复用 `text-search-engine` 核心匹配，保留原文范围，不另写拼音算法。
 - `HighlightWithRanges` 是 React DOM 组件，不能直接传给 Raycast `List.Item`。内置 Clipboard History 的高亮实现和公开扩展 API 必须区分；当前调查见 `docs/Raycast列表高亮调查.md`。
 - 不用括号、Unicode 伪字形、图片标题或右侧预览冒充真实行内高亮。
@@ -26,7 +26,7 @@
 
 ## 验证
 
-使用 `npm run dev` 开发，`npm run check` 完成类型、测试、格式、构建检查，`npm run test:local` 检查本机数据与性能。分别记录逻辑测试、原生界面和真实 Chrome 跳转，不混用历史版本证据。
+使用 `npm run dev` 开发，`npm run check` 完成类型、测试、Raycast 官方 lint、ESLint、格式、构建检查，`npm run test:local` 检查本机数据与性能。分别记录逻辑测试、原生界面和真实 Chrome 跳转，不混用历史版本证据。
 
 ## 参考
 

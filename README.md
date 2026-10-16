@@ -8,7 +8,7 @@ Search Chrome tabs, bookmarks, and history with Chinese, Pinyin, initials, or En
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Open **搜索浏览器** (Search Browser) in Raycast to search tabs, bookmarks, and history in one list.
+Open **Search Browser** in Raycast to search tabs, bookmarks, and history in one list.
 
 ![Search browser from Raycast](media/search-overview.png)
 
@@ -40,13 +40,19 @@ Powered by [text-search-engine](https://github.com/cjinhuo/text-search-engine), 
 - Pinyin initials and full Pinyin search, with mixed Chinese, Pinyin, and English input.
 - Domain and space-separated word search, with words matched in any order.
 
-By default, it searches titles and domains using the matching and ranking rules of the [Blazwitcher Chrome extension](https://chromewebstore.google.com/detail/blazwitcher-search-and-sw/fjgablnemienkegdnbihhemebmmonihg) ([GitHub source](https://github.com/cjinhuo/blazwitcher)). This mode appears as **与 Chrome Blaz 一致** (Match Chrome Blaz) in preferences; "Chrome Blaz" refers to the Blazwitcher browser edition. To search URL paths, query parameters, or fragments, select **完整网址搜索** (Full URL Search), which also retains title-first ranking.
+By default, it searches titles and domains using the matching and ranking rules of the [Blazwitcher Chrome extension](https://chromewebstore.google.com/detail/blazwitcher-search-and-sw/fjgablnemienkegdnbihhemebmmonihg) ([GitHub source](https://github.com/cjinhuo/blazwitcher)). This mode appears as **Match Chrome Blaz** in preferences; "Chrome Blaz" refers to the Blazwitcher browser edition. To search URL paths, query parameters, or fragments, select **Full URL Search**, which also retains title-first ranking.
 
 Start with `sxw` to find several “上下文” pages, then use `sxwcj` for **上下文层级** or `sxwlx` for **上下文类型**.
 
 ![Narrow down Chinese titles with Pinyin initials](media/pinyin-search.gif)
 
 [Watch the Pinyin-search recording (MP4)](media/pinyin-search.mp4).
+
+English searches work the same way. In this demo, `/t skills` finds three tabs with similar titles. Add the project name with `/t skills openai` to narrow the list to two results, with **openai/skills** ranked first. The GitHub title and URL make the matching project easy to identify.
+
+![Refine similar Skills tabs with an English project keyword](media/english-search.gif)
+
+[Watch the English-search recording (MP4)](media/english-search.mp4).
 
 Refine `kuaisu` to `kuaisu rm`, then add `claude.com` to find **快速入门 - Claude Code Docs**. Reordering the query to `rm claude.com kuaisu` finds the same page.
 
@@ -56,15 +62,15 @@ Refine `kuaisu` to `kuaisu rm`, then add `claude.com` to find **快速入门 - C
 
 ### `⌘D` page preview
 
-Install and enable the official [Raycast Browser Extension](https://www.raycast.com/browser-extension) to make the preview available. Select a result and press `⌘D`, or choose **展开预览** (Expand Preview) in Actions, to show the native detail panel. It starts collapsed each time you open the command.
+Install and enable the official [Raycast Browser Extension](https://www.raycast.com/browser-extension) to make the preview available. Select a result and press `⌘D`, or choose **Expand Preview** in Actions, to show the native detail panel. It starts collapsed each time you open the command.
 
 ![Page content in the command's detail panel](media/page-preview.png)
 
-For ordinary HTTP(S) tabs, the panel can display the page's extracted Markdown. Bookmarks, history, incognito tabs, and special-protocol pages show existing metadata only. **刷新预览** (Refresh Preview) rereads the selected tab's content without reloading the Chrome page.
+For ordinary HTTP(S) tabs, the panel can display the page's extracted Markdown. Bookmarks, history, incognito tabs, and special-protocol pages show existing metadata only. **Refresh Preview** rereads the selected tab's content without reloading the Chrome page.
 
 Some existing tabs may fail to connect, and dynamic pages may produce incomplete content. The preview entry is hidden when the browser-extension capability is unavailable. See the [preview notes](docs/详情预览试用说明.md) for known limitations.
 
-![Expand, scroll, and collapse the page preview](media/page-preview.gif)
+![Open the extracted page-content preview with Command-D](media/page-preview.gif)
 
 [Watch the page-preview recording (MP4)](media/page-preview.mp4).
 
@@ -83,33 +89,31 @@ Switching sources keeps the keywords and removes the previous prefix.
 
 In the default mode, duplicates are merged after source filtering and matching. Separate open tabs remain separate; bookmarks and history with identical titles or full URLs are merged, keeping tabs, then history, then bookmarks. History-only and bookmark-only searches also merge duplicates. Full URL Search uses its original ranking and duplicate handling; see the [search strategy notes](docs/默认搜索策略对齐.md).
 
-With keywords entered, the first **2** results appear in **最优建议** (Top Suggestions), followed by the remaining results in tab, history, and bookmark sections. History and bookmarks each show up to **10** results by default, including any results in Top Suggestions. Both counts and the suggestion count are configurable.
+With keywords entered, the first **2** results appear in **Top Suggestions**, followed by the remaining results in tab, history, and bookmark sections. History and bookmarks each show up to **10** results by default, including any results in Top Suggestions. Both counts and the suggestion count are configurable.
 
 ![Filter tabs, bookmarks, and history](media/source-filters.gif)
 
 ### Search modes and preferences
 
-Open **`⌘K` → 扩展设置** (Extension Preferences) to choose a search mode and customize its parameters. Both modes support the same result counts and strict-search option.
+Open **`⌘K` → Extension Preferences** to choose a search mode and customize its parameters. Both modes support the same result counts and strict-search option.
 
-| Preference                                  | Default                                 | Options                                                                                                                 |
-| ------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 搜索方式 (Search Mode)                      | 与 Chrome Blaz 一致 (Match Chrome Blaz) | Titles and domains; choose 完整网址搜索 (Full URL Search) to include the rest of the URL and retain title-first ranking |
-| 历史记录时间范围（天） (History Date Range) | 14 days                                 | 0–36,500 days; 0 removes the date limit                                                                                 |
-| 历史记录读取上限 (History Reading Limit)    | 1,000                                   | 1–100,000 records, read by most recent visit                                                                            |
-| 历史记录显示数量 (History Result Count)     | 10                                      | 1–20 per search, including Top Suggestions                                                                              |
-| 书签显示数量 (Bookmark Result Count)        | 10                                      | 1–20 per search, including Top Suggestions                                                                              |
-| 最优建议数量 (Top Suggestions)              | 2                                       | 1–10 when keywords are entered; hidden for an empty query                                                               |
-| 严格搜索（英文连续匹配） (Strict Search)    | Off                                     | Require consecutive English-character matches; Chinese Pinyin and initials remain supported                             |
+| Preference                                  | Default           | Options                                                                                                  |
+| ------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------- |
+| Search Mode                                 | Match Chrome Blaz | Titles and domains; choose Full URL Search to include the rest of the URL and retain title-first ranking |
+| History Date Range (Days)                   | 14 days           | 0–36,500 days; 0 removes the date limit                                                                  |
+| History Reading Limit                       | 1,000             | 1–100,000 records, read by most recent visit                                                             |
+| History Result Count                        | 10                | 1–20 per search, including Top Suggestions                                                               |
+| Bookmark Result Count                       | 10                | 1–20 per search, including Top Suggestions                                                               |
+| Top Suggestions                             | 2                 | 1–10 when keywords are entered; hidden for an empty query                                                |
+| Strict Search (Consecutive English Matches) | Off               | Require consecutive English-character matches; Chinese Pinyin and initials remain supported              |
 
 The reading limit controls how many history records can be searched; result counts control how many matches appear. Top Suggestions moves the first results into its own section without adding results. Save preferences, then reopen the command. Values above a setting's maximum are capped; invalid input uses its default.
 
 Existing saved preferences are preserved. Raycast and the Chrome edition save their settings independently; matching defaults do not automatically synchronize custom settings or guarantee identical tab ordering. See the [search strategy notes](docs/默认搜索策略对齐.md) for details.
 
-![Raycast search preferences](docs/screenshots/search-settings.png)
+![Raycast search preferences](media/search-settings.png)
 
-The screenshot shows an existing user's reading limit of **2,000**; the default for a new installation is **1,000**.
-
-![Change search preferences and verify the result](media/search-settings.gif)
+![Adjust the history result count and restore it to 10](media/search-settings.gif)
 
 ### Open the page you mean
 
@@ -117,7 +121,7 @@ Press `Enter` on a tab to focus that exact tab. For a bookmark or history result
 
 You can also open any result in a new tab or in the tab that was active when you launched the command. These actions retain the captured Chrome target; if it is no longer available, the extension reports the failure rather than choosing another tab.
 
-![Focus an existing tab and open a new tab](media/open-actions.gif)
+Use `⌘Enter` for a new tab or `⇧Enter` for the captured current tab. See the shortcut table below for all keyboard actions.
 
 ### Keyboard control and custom shortcuts
 
@@ -131,7 +135,7 @@ You can also open any result in a new tab or in the tab that was active when you
 | Open Actions                            | `⌘K`                 |
 | Expand or collapse the optional preview | `⌘D`, when available |
 
-Open Actions → **快捷键设置** (Shortcut Settings) to customize additional bindings or restore defaults. Changes persist across command sessions. Raycast controls the primary `Enter` and `⌘Enter` actions.
+Open Actions → **Shortcut Settings** to customize additional bindings or restore defaults. Changes persist across command sessions. Raycast controls the primary `Enter` and `⌘Enter` actions.
 
 To launch the command directly, assign a hotkey or alias in Raycast Settings → Extensions. The Raycast edition has no predefined global activation hotkey.
 
@@ -139,11 +143,11 @@ To launch the command directly, assign a hotkey or alias in Raycast Settings →
 
 ### Chrome profiles and local startup cache
 
-Open Actions → **切换 Chrome 配置** (Switch Chrome Profile) to filter bookmarks and history by a specific profile or search all profiles. Open tabs still come from all readable Chrome windows.
+Bookmarks and history initially use Chrome’s most recently used profile. Open Actions → **Switch Chrome Profile** to choose a specific profile or **All Profiles**. The choice applies to the current command session; reopening the command uses Chrome’s most recently used profile again. Open tabs always come from all readable Chrome windows, regardless of this selection.
 
 New installations read up to **1,000 history records from the last 14 days**. Adjust both values in extension preferences; the reading limit can reach **100,000**, and **0** days means all dates. The limit also applies to combined history across profiles. Existing saved preferences are retained. Incognito tabs are excluded by default and can be enabled in preferences.
 
-The startup cache is enabled by default. It displays a small local snapshot of bookmarks and history while fresh data loads, with cached results labeled. Cached history is filtered by the current date range. Disable the cache in preferences or clear it from Actions → **清除启动缓存** (Clear Startup Cache).
+The startup cache is enabled by default. It displays a small local snapshot of bookmarks and history while fresh data loads, with cached results labeled. Cached history is filtered by the current date range. Disable the cache in preferences or clear it from Actions → **Clear Startup Cache**.
 
 <!-- Demo: media/profile-settings.gif -->
 
@@ -160,7 +164,7 @@ npm ci
 npm run dev
 ```
 
-After the build succeeds, open Raycast, search for `Blazwitcher`, and run **搜索浏览器** (Search Browser). Current command and menu labels are in Chinese.
+After the build succeeds, open Raycast, search for `Blazwitcher`, and run **Search Browser**. The command and menu labels use US English; Chinese titles and search queries are fully supported.
 
 1. Enter a title, Pinyin, initials, or domain fragment.
 2. Select the result with `↑` / `↓`.
@@ -186,6 +190,6 @@ The first tab operation may ask you to allow **Raycast to control Google Chrome*
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development and troubleshooting, and the [verification records](docs/验证记录.md) for the boundaries of previous tests. Report reproducible issues in [GitHub Issues](https://github.com/cjinhuo/blazwitcher-raycast/issues).
 
-Preparing screenshots or GIFs? Follow the [recording checklist](docs/media-guide.md) for scenes, filenames, and Store screenshot requirements.
+Preparing screenshots or GIFs? Follow the [recording checklist](docs/media-guide.md) for scenes and filenames. See the [Store submission guide](docs/store-submission.md) for screenshots and publishing.
 
 [MIT License](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)

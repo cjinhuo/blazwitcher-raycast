@@ -11,9 +11,9 @@ const sourceSections: Array<{
   source: Source;
   title: string;
 }> = [
-  { key: "tabs", source: "tab", title: "已打开标签页" },
-  { key: "history", source: "history", title: "最近历史记录" },
-  { key: "bookmarks", source: "bookmark", title: "书签" },
+  { key: "tabs", source: "tab", title: "Open Tabs" },
+  { key: "history", source: "history", title: "History" },
+  { key: "bookmarks", source: "bookmark", title: "Bookmarks" },
 ];
 
 export function createResultSections(
@@ -27,7 +27,7 @@ export function createResultSections(
     const suggestions = results.slice(0, topSuggestionsCount);
     sections.push({
       key: "suggestions",
-      title: "最优建议",
+      title: "Top Suggestions",
       results: suggestions,
     });
     remaining = results.slice(suggestions.length);

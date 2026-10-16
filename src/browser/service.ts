@@ -169,7 +169,9 @@ export class BrowserService {
           loading: false,
           warnings: result.running
             ? []
-            : ["Chrome 未运行；启动后重新打开命令即可读取标签页。"],
+            : [
+                "Chrome is not running. Start it and reopen the command to load tabs.",
+              ],
         };
       } catch (error) {
         if (!live()) return;
@@ -238,7 +240,7 @@ export class BrowserService {
             const warnings: string[] = [];
             if (!selected.length)
               warnings.push(
-                "未找到 Chrome 配置，请先运行 Google Chrome 后重新打开命令。",
+                "No Chrome profile was found. Start Google Chrome and reopen the command.",
               );
             for (const profile of selected) {
               if (!live()) return;
@@ -249,7 +251,7 @@ export class BrowserService {
                   entries.push(...result.entries);
                   warnings.push(
                     ...result.warnings.map(
-                      (message) => `${profile.name}：${message}`,
+                      (message) => `${profile.name}: ${message}`,
                     ),
                   );
                   if (
@@ -277,7 +279,7 @@ export class BrowserService {
               } catch (error) {
                 if (!live()) return;
                 this.previews?.remove(source, profile);
-                warnings.push(`${profile.name}：${describeError(error)}`);
+                warnings.push(`${profile.name}: ${describeError(error)}`);
               }
             }
             if (!live()) return;
@@ -378,11 +380,11 @@ export class BrowserService {
       ref.requestId !== this.latestRequest ||
       ref.requestId !== this.cache?.requestId
     )
-      throw new Error("结果已更新，请重新选择。");
+      throw new Error("Results changed. Select a result again.");
     const entry = this.cache.results.find(
       (result) => result.entry.id === ref.id,
     )?.entry;
-    if (!entry) throw new Error("结果已更新，请重新选择。");
+    if (!entry) throw new Error("Results changed. Select a result again.");
     return entry;
   }
 }

@@ -65,7 +65,7 @@ export function isScope(value: unknown): value is Scope {
 export function normalizeBrowserOptions(
   value: Partial<BrowserOptions>,
 ): BrowserOptions {
-  if (!isScope(value.scope)) throw new Error("无效的搜索来源。");
+  if (!isScope(value.scope)) throw new Error("Invalid search source.");
   return {
     ...normalizeSearchParameters(value),
     scope: value.scope,

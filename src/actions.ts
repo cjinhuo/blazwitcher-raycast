@@ -19,33 +19,33 @@ export interface ActionDefinition {
 export const actionDefinitions: ActionDefinition[] = [
   {
     id: "newTab",
-    title: "在新标签页打开",
+    title: "Open in New Tab",
     group: "common",
     defaultShortcut: null,
   },
-  { id: "copy", title: "复制地址", group: "common", defaultShortcut: "cmd+c" },
+  { id: "copy", title: "Copy URL", group: "common", defaultShortcut: "cmd+c" },
   {
     id: "toggleDetail",
-    title: "显示／隐藏详情",
+    title: "Expand/Collapse Preview",
     group: "common",
     defaultShortcut: "cmd+d",
   },
   ...(["all", "tab", "bookmark", "history"] as const).map((scope, index) => ({
     id: `source.${scope}` as const,
-    title: `搜索${{ all: "全部来源", tab: "标签页", bookmark: "书签", history: "历史记录" }[scope]}`,
+    title: `Search ${{ all: "All Sources", tab: "Open Tabs", bookmark: "Bookmarks", history: "History" }[scope]}`,
     group: "common" as const,
     defaultShortcut: `cmd+shift+${index}`,
   })),
   ...(["tab", "bookmark", "history"] as const).flatMap((source) => [
     {
       id: `${source}.open` as const,
-      title: source === "tab" ? "切换到标签页" : "在 Chrome 中打开",
+      title: source === "tab" ? "Switch to Tab" : "Open in Chrome",
       group: source,
       defaultShortcut: null,
     },
     {
       id: `${source}.here` as const,
-      title: "在当前标签页打开",
+      title: "Open in Current Tab",
       group: source,
       defaultShortcut: "shift+return",
     },

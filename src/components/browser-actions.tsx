@@ -17,7 +17,7 @@ import {
 import { describeError, navigateTo, openCapturedUrl } from "../browser/chrome";
 import type { useShortcuts } from "../hooks/use-shortcuts";
 import { raycastShortcut } from "../shortcuts";
-import { sourceNames, type BrowserEntry, type Scope } from "../types";
+import type { BrowserEntry, Scope } from "../types";
 import { ShortcutSettings } from "./shortcut-settings";
 
 const icons: Record<ResultActionKind, Icon> = {
@@ -55,14 +55,14 @@ export function BrowserActions({
         copy: (url) => Clipboard.copy(url),
       });
       if (kind === "copy")
-        await showToast({ style: Toast.Style.Success, title: "已复制地址" });
+        await showToast({ style: Toast.Style.Success, title: "URL Copied" });
       else await closeMainWindow();
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
-        title: kind === "copy" ? "复制失败" : "打开失败",
+        title: kind === "copy" ? "Could Not Copy URL" : "Could Not Open Page",
         message:
-          error instanceof Error && error.message.includes("结果已更新")
+          error instanceof Error && error.message.includes("Results changed")
             ? error.message
             : describeError(error),
       });
@@ -84,11 +84,11 @@ export function BrowserActions({
           {previewActions}
         </ActionPanel.Section>
       )}
-      <ActionPanel.Section title="切换搜索来源">
+      <ActionPanel.Section title="Search Sources">
         {scopes.map((target) => (
           <Action
             key={target}
-            title={`搜索${target === "all" ? "全部来源" : sourceNames[target]}`}
+            title={`Search ${{ all: "All Sources", tab: "Open Tabs", bookmark: "Bookmarks", history: "History" }[target]}`}
             icon={scope === target ? Icon.Checkmark : Icon.MagnifyingGlass}
             shortcut={raycastShortcut(shortcuts.bindings[`source.${target}`])}
             onAction={() => selectScope(target)}
@@ -98,7 +98,7 @@ export function BrowserActions({
       <ActionPanel.Section>
         {shortcuts.ready && (
           <Action.Push
-            title="快捷键设置"
+            title="Shortcut Settings"
             icon={Icon.Keyboard}
             target={
               <ShortcutSettings
@@ -112,7 +112,7 @@ export function BrowserActions({
         {!entry && previewActions}
         {children}
         <Action
-          title="扩展设置"
+          title="Extension Preferences"
           icon={Icon.Gear}
           onAction={openExtensionPreferences}
         />

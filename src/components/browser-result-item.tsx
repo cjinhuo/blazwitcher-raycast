@@ -61,23 +61,23 @@ function resultAccessories(entry: BrowserEntry) {
   if (entry.source === "tab" && entry.tabGroup)
     accessories.push({
       tag: {
-        value: entry.tabGroup.title || "标签组",
+        value: entry.tabGroup.title || "Tab Group",
         color: tabGroupColors[entry.tabGroup.color],
       },
-      tooltip: "Chrome 标签组",
+      tooltip: "Chrome tab group",
     });
   if (entry.source === "tab" && entry.active)
     accessories.push({
-      tag: { value: "当前标签", color: Color.Green },
+      tag: { value: "Active Tab", color: Color.Green },
     });
   if (entry.incognito)
-    accessories.push({ icon: Icon.EyeDisabled, tooltip: "无痕标签" });
+    accessories.push({ icon: Icon.EyeDisabled, tooltip: "Incognito tab" });
   if (entry.source === "history" && entry.visitedAt !== undefined) {
     const visited = new Date(entry.visitedAt);
     if (!Number.isNaN(visited.getTime()))
       accessories.push({
         date: visited,
-        tooltip: `最近访问：${visited.toLocaleString("zh-CN", { hour12: false })}`,
+        tooltip: `Last visited: ${visited.toLocaleString("en-US", { hour12: false })}`,
       });
   }
   accessories.push({

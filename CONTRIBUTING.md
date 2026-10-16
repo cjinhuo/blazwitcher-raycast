@@ -27,7 +27,7 @@ npm ci
 npm run dev
 ```
 
-`npm run dev` 对应 `ray develop`，会构建代码、将扩展导入本机 Raycast，并持续监听修改。出现 `ready - built extension successfully` 后，打开 Raycast 搜索 `Blazwitcher`，只保留“搜索浏览器”命令，入口文件为 `src/search-all.tsx`。来源通过下拉框、`/t`／`/b`／`/h` 和命令内快捷键切换。旧入口的 Raycast 启动热键需要改绑。
+`npm run dev` 对应 `ray develop`，会构建代码、将扩展导入本机 Raycast，并持续监听修改。出现 `ready - built extension successfully` 后，打开 Raycast 搜索 `Blazwitcher`，只保留“Search Browser”命令，入口文件为 `src/search-all.tsx`。来源通过下拉框、`/t`／`/b`／`/h` 和命令内快捷键切换。旧入口的 Raycast 启动热键需要改绑。
 
 开发期间保持该终端运行。保存代码后会重新构建；自动重载由 Raycast 的 Developer 设置中的 **Auto-reload on save** 控制。如果界面未更新，先确认构建成功，再退出当前命令并重新打开。CLI 的导入和重载行为参见 [Raycast CLI 文档](https://developers.raycast.com/information/developer-tools/cli)。
 
@@ -43,20 +43,20 @@ npm run build
 
 ### 设置与权限
 
-在扩展中按 `⌘K`，选择“扩展设置”：
+在扩展中按 `⌘K`，选择“Extension Preferences”：
 
-- **历史记录读取上限**：默认 `20000`，最高 `100000`。切换到“全部配置”后仍受合并后的总上限约束。
-- **无痕标签页**：默认关闭，需要时自行开启。
+- **History Reading Limit**：默认 `1000`，最高 `100000`。切换到“All Profiles”后仍受合并后的总上限约束。
+- **Incognito Tabs**：默认关闭，需要时自行开启。
 
-快捷键通过 `⌘K` → “快捷键设置”修改，保存后立即生效。来源切换默认使用 `⌘⇧0/1/2/3`，可分别自定义或留空停用额外绑定；来源动作菜单及下拉框始终保留。扩展偏好中的旧来源快捷键仅在首次没有已保存配置时迁移，后续修改不会生效。
+快捷键通过 `⌘K` → “Shortcut Settings”修改，保存后立即生效。来源切换默认使用 `⌘⇧0/1/2/3`，可分别自定义或留空停用额外绑定；来源动作菜单及下拉框始终保留。扩展偏好中的旧来源快捷键仅在首次没有已保存配置时迁移，后续修改不会生效。
 
-书签和历史的 Chrome 配置通过 `⌘K` → “切换 Chrome 配置”选择，也可选“全部配置”。标签页来自所有可读的 Chrome 窗口。
+书签和历史默认使用 Chrome 最近使用的配置，通过 `⌘K` → “Switch Chrome Profile”可选择其他配置或“All Profiles”。选择仅在当前命令会话内生效；重新打开命令时会再次采用最近使用的配置。标签页来自所有可读的 Chrome 窗口，不受这项选择影响。
 
 重装时，如果卸载曾选择保留设置，旧的历史上限和无痕偏好会继续生效，不一定是默认值。修改历史上限或无痕偏好后，重新打开命令以确认配置生效；命令内快捷键设置无需重新打开。
 
 首次读取或切换标签页时，macOS 可能询问是否允许 **Raycast 控制 Google Chrome**。若此前拒绝，可按界面提示到“系统设置 → 隐私与安全性 → 自动化”检查 Raycast 对 Chrome 的授权，然后退出并重新打开命令。
 
-文件读取失败时，先查看列表底部“来源状态”的错误提示，检查 Chrome 是否已初始化、所选配置是否正确，以及 Raycast 的文件访问权限。不要通过删除或修改 Chrome 原始数据库来排查。
+文件读取失败时，先查看列表底部“Source Status”的错误提示，检查 Chrome 是否已初始化、所选配置是否正确，以及 Raycast 的文件访问权限。不要通过删除或修改 Chrome 原始数据库来排查。
 
 ## 日常调试
 
@@ -68,7 +68,7 @@ npm run build
 
 1. **开发终端**：检查编译失败、运行日志和堆栈。
 2. **Raycast 错误界面**：未捕获异常会展示错误，开发模式包含定位信息。
-3. **“来源状态”和操作提示**：单来源加载失败会保留其他可用结果；打开或复制失败会显示提示。此类已处理错误不一定出现在异常界面。
+3. **“Source Status”和操作提示**：单来源加载失败会保留其他可用结果；打开或复制失败会显示提示。此类已处理错误不一定出现在异常界面。
 
 日志与错误界面的说明参见 [Raycast 调试文档](https://developers.raycast.com/basics/debug-an-extension)。提交问题时保留复现步骤和必要错误分类，不附完整浏览历史或未经脱敏的日志。
 
@@ -109,17 +109,17 @@ react-devtools
 
 ## 检查与验证
 
-| 命令                 | 检查内容                               |
-| -------------------- | -------------------------------------- |
-| `npm run typecheck`  | TypeScript 类型检查                    |
-| `npm test`           | 搜索、数据读取、服务状态和内存回归测试 |
-| `npm run lint`       | ESLint 与 Prettier 检查                |
-| `npm run format`     | 格式化项目文件，会修改文件             |
-| `npm run build`      | Raycast 发行构建，写入本机扩展目录     |
-| `npm run check`      | 依次执行类型检查、测试、格式检查和构建 |
-| `npm run test:local` | 读取本机 Chrome 数据并输出诊断统计     |
+| 命令                 | 检查内容                                   |
+| -------------------- | ------------------------------------------ |
+| `npm run typecheck`  | TypeScript 类型检查                        |
+| `npm test`           | 搜索、数据读取、服务状态和内存回归测试     |
+| `npm run lint`       | Raycast 官方 lint、ESLint 与 Prettier 检查 |
+| `npm run format`     | 格式化项目文件，会修改文件                 |
+| `npm run build`      | Raycast 发行构建，写入本机扩展目录         |
+| `npm run check`      | 依次执行构建、类型检查、测试和完整 lint    |
+| `npm run test:local` | 读取本机 Chrome 数据并输出诊断统计         |
 
-修改代码后，按影响范围运行测试；完成改动后运行 `npm run check`。仅修改 Markdown 时，可以先做针对性的格式检查：
+修改代码后，按影响范围运行测试；完成改动后运行 `npm run check`。该命令先构建并生成 `raycast-env.d.ts`，确保全新检出后也能使用生成的偏好类型。仅修改 Markdown 时，可以先做针对性的格式检查：
 
 ```bash
 npx prettier --check CONTRIBUTING.md
@@ -142,7 +142,7 @@ OpenSpec CLI 不属于本项目 npm 依赖；普通本地安装和运行不需�
 自动化检查之后，按本次改动选择以下场景进行人工验证，并在 [验证记录](docs/验证记录.md) 中区分“逻辑测试通过”和“真实界面已验证”：
 
 - 打开统一搜索入口并切换来源，并尝试 `/t`、`/b`、`/h` 前缀。
-- 搜索已知记录，覆盖中文、全拼、首字母、混合查询、URL 和空查询；例如准备标题包含“周报”的记录，再输入 `zhoubao`。
+- 搜索已知记录，覆盖中文、全拼、首字母、混合查询、URL 和空查询；例如准备“上下文层级”和“上下文类型”两个页面，输入 `sxw` 后再用 `sxwcj` 缩小范围。
 - 连续输入、删除、快速切换查询，确认旧结果不会覆盖新结果；滚动超过一页，检查分页。
 - 用上下键选择，Enter 打开，`⌘Enter` 新建标签，`⇧Enter` 在捕获标签打开，`⌘C` 复制原始完整地址，`⌘K` 打开操作菜单。
 - 切换 Chrome 配置；修改历史上限和无痕偏好后重新进入命令。
@@ -153,21 +153,25 @@ OpenSpec CLI 不属于本项目 npm 依赖；普通本地安装和运行不需�
 
 | 现象                             | 排查方式                                                                                                                |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Raycast 搜不到扩展               | 确认在正确项目目录执行了 `npm run dev`，终端构建成功，并在 Raycast 设置中确认“Blazwitcher 拼音搜索”及对应命令已启用。   |
+| Raycast 搜不到扩展               | 确认在正确项目目录执行了 `npm run dev`，终端构建成功，并在 Raycast 设置中确认“Blazwitcher”及对应命令已启用。            |
 | 保存后仍显示旧界面               | 检查构建错误和 Developer 的自动重载设置；退出命令重新打开。必要时停止当前开发进程，再启动一次。                         |
 | Chrome 标签页为空或无法切换      | 确认 Chrome 正在运行，并检查 Raycast 控制 Chrome 的自动化权限；重新打开命令。                                           |
-| 书签或历史缺失                   | 检查所选 Chrome 配置、历史上限和“来源状态”。终端诊断与 Raycast 的权限需分别判断。                                       |
+| 书签或历史缺失                   | 检查所选 Chrome 配置、历史上限和“Source Status”。终端诊断与 Raycast 的权限需分别判断。                                  |
 | 提示“结果已更新，请重新选择”     | 这是过期结果保护。等待新结果后重新选择；不要绕过请求序号或数据版本校验。                                                |
 | 能搜索到拼音结果，但文字没有高亮 | 当前公开 `List.Item` 接口尚未实现所需的彩色命中高亮，这不是安装失败。参见 [高亮能力调查](docs/Raycast列表高亮调查.md)。 |
 
 ## 卸载与重新安装
 
 1. 先在开发终端按 `Ctrl+C`，停止 `npm run dev`。
-2. 打开 Raycast 设置，找到 **Blazwitcher 拼音搜索**。
+2. 打开 Raycast 设置，找到 **Blazwitcher**。
 3. 右键扩展，选择 **Uninstall Extension**。
 4. 需要保留配置时选择 **Uninstall but Keep Settings**；需要清除扩展配置和数据时选择 **Uninstall and Delete Settings**。
 
 卸载不会删除项目源码。之后重新安装，回到项目根目录执行 `npm run dev`；如果依赖已删除，则先执行 `npm ci`。不要通过修改 Raycast 私有数据库或应用安装包来注册、重置或移除扩展。
+
+## Store 发布
+
+账号、截图、检查及官方审核 PR 的操作步骤见 [Store 提交指南](docs/store-submission.md)。`npm run publish` 调用 Raycast 官方发布工具；不要执行 `npm publish`。
 
 ## 协作约定
 

@@ -16,15 +16,17 @@ export async function readPagePreview(
   client: PageContentClient,
   signal: AbortSignal,
 ): Promise<PagePreview> {
-  if (entry.source !== "tab") return { message: "打开页面后可预览正文。" };
-  if (entry.incognito) return { message: "无痕标签仅展示基础信息。" };
+  if (entry.source !== "tab")
+    return { message: "Open this page in Chrome to preview its content." };
+  if (entry.incognito)
+    return { message: "Incognito tabs show basic information only." };
   const tabId = Number(entry.tabId);
   if (
     !Number.isSafeInteger(tabId) ||
     tabId <= 0 ||
     !/^https?:\/\//i.test(entry.url)
   )
-    return { message: "此页面不支持正文预览。" };
+    return { message: "Content preview is not supported for this page." };
   let expired = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const stopped = () => signal.aborted || expired;
@@ -32,11 +34,16 @@ export async function readPagePreview(
     const tabs = (await client.getTabs()).filter((tab) => tab.id === tabId);
     return tabs.length === 1 && tabs[0].url === entry.url;
   };
-  const changed = { message: "标签页已关闭或地址发生变化，请重新打开搜索。" };
+  const changed = {
+    message: "The tab was closed or its URL changed. Reopen the search.",
+  };
   try {
     if (stopped()) return {};
     if (!client.isAvailable())
-      return { message: "安装并连接 Raycast 浏览器扩展后可预览正文。" };
+      return {
+        message:
+          "Install and connect the Raycast Browser Extension to preview page content.",
+      };
     const read = async (): Promise<PagePreview> => {
       if (!(await matches())) return changed;
       if (stopped()) return {};
@@ -50,14 +57,19 @@ export async function readPagePreview(
             markdown: markdown.slice(0, 8000),
             truncated: markdown.length > 8000,
           }
-        : { message: "未提取到正文，可在 Chrome 中查看。" };
+        : {
+            message: "No page content was extracted. View this page in Chrome.",
+          };
     };
     return await Promise.race([
       read(),
       new Promise<PagePreview>((resolve) => {
         timer = setTimeout(() => {
           expired = true;
-          resolve({ message: "正文读取超时，可刷新预览重试。" });
+          resolve({
+            message:
+              "Reading page content timed out. Refresh the preview to try again.",
+          });
         }, 6000);
       }),
     ]);
@@ -70,10 +82,11 @@ export async function readPagePreview(
     )
       return {
         message:
-          "此标签页尚未连接 Raycast 浏览器扩展。请先在 Chrome 中刷新该页面，再回来刷新预览；若仍不可读，请检查扩展对此网站的访问权限。",
+          "This tab is not connected to the Raycast Browser Extension. Reload the page in Chrome, then refresh the preview. If content is still unavailable, check the extension’s access to this site.",
       };
     return {
-      message: "正文读取失败。可刷新预览重试，或在 Chrome 中查看此页面。",
+      message:
+        "Could not read page content. Refresh the preview to try again, or view this page in Chrome.",
     };
   } finally {
     clearTimeout(timer);

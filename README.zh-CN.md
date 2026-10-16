@@ -8,7 +8,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-在 Raycast 中打开 **搜索浏览器** 命令，即可在一个列表中搜索标签页、书签和历史记录。
+在 Raycast 中打开 **Search Browser** 命令，即可在一个列表中搜索标签页、书签和历史记录。
 
 ![在 Raycast 中搜索浏览器](media/search-overview.png)
 
@@ -40,13 +40,19 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 - 首字母与完整拼音搜索，支持中文、拼音和英文混合输入。
 - 域名搜索与空格分词搜索，分词后无需按顺序匹配。
 
-默认搜索标题与域名，匹配与排序规则沿用 [Blazwitcher Chrome 插件](https://chromewebstore.google.com/detail/blazwitcher-search-and-sw/fjgablnemienkegdnbihhemebmmonihg)（[GitHub 源码](https://github.com/cjinhuo/blazwitcher)）。这项设置名为**与 Chrome Blaz 一致**，“Chrome Blaz”指的就是 Blazwitcher 浏览器版。需要搜索网址路径、查询参数或片段时，在扩展设置中选择**完整网址搜索**，这个模式也保留标题优先排序。
+默认搜索标题与域名，匹配与排序规则沿用 [Blazwitcher Chrome 插件](https://chromewebstore.google.com/detail/blazwitcher-search-and-sw/fjgablnemienkegdnbihhemebmmonihg)（[GitHub 源码](https://github.com/cjinhuo/blazwitcher)）。这项设置名为**Match Chrome Blaz**，“Chrome Blaz”指的就是 Blazwitcher 浏览器版。需要搜索网址路径、查询参数或片段时，在扩展设置中选择**Full URL Search**，这个模式也保留标题优先排序。
 
 先用 `sxw` 找到多篇“上下文”文档，再输入 `sxwcj` 定位**上下文层级**，或用 `sxwlx` 找到**上下文类型**。
 
 ![用拼音首字母逐步缩小中文标题的匹配范围](media/pinyin-search.gif)
 
 [观看拼音搜索录屏（MP4）](media/pinyin-search.mp4)。
+
+英文搜索也可以逐步细化。在这组演示中，`/t skills` 找到 3 个标题相近的标签；加上项目关键词，输入 `/t skills openai` 后缩小到 2 个结果，**openai/skills** 排在首位。结合列表里的 GitHub 标题和网址，可以直观看出命中的项目。
+
+![用英文项目关键词缩小相近 Skills 标签的搜索范围](media/english-search.gif)
+
+[观看英文搜索录屏（MP4）](media/english-search.mp4)。
 
 从 `kuaisu` 到 `kuaisu rm` 逐步缩小范围，再加上 `claude.com` 找到**快速入门 - Claude Code Docs**；换成 `rm claude.com kuaisu` 也能找到同一页。
 
@@ -56,15 +62,15 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 ### `⌘D` 网页预览
 
-安装并启用官方 [Raycast Browser Extension](https://www.raycast.com/browser-extension) 后，预览入口才会出现。选中结果后按 `⌘D`，或通过动作菜单 → **展开预览** 打开原生右侧面板。每次进入搜索命令都默认收起。
+安装并启用官方 [Raycast Browser Extension](https://www.raycast.com/browser-extension) 后，预览入口才会出现。选中结果后按 `⌘D`，或通过动作菜单 → **Expand Preview** 打开原生右侧面板。每次进入搜索命令都默认收起。
 
 ![搜索命令右侧面板中的网页正文](media/page-preview.png)
 
-普通 HTTP(S) 标签页可以展示提取的 Markdown 正文；书签、历史、无痕标签和特殊协议页面仅展示已有基础信息。**刷新预览** 会重新读取选中标签的正文，不会刷新 Chrome 页面。
+普通 HTTP(S) 标签页可以展示提取的 Markdown 正文；书签、历史、无痕标签和特殊协议页面仅展示已有基础信息。**Refresh Preview** 会重新读取选中标签的正文，不会刷新 Chrome 页面。
 
 部分已有标签可能连接失败，动态网页的正文可能不完整。浏览器扩展能力不可用时会隐藏预览入口。具体限制见 [详情预览说明](docs/详情预览试用说明.md)。
 
-![展开、滚动和收起网页正文预览](media/page-preview.gif)
+![按 ⌘D 展开已提取的网页正文](media/page-preview.gif)
 
 [观看网页预览录屏（MP4）](media/page-preview.mp4)。
 
@@ -81,35 +87,33 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 切换来源会保留关键词，并移除原来的来源前缀。
 
-默认模式会先筛选来源、匹配关键词，再合并重复记录。多个实际打开的标签页仍分别保留；书签与历史按相同标题或完整 URL 合并，依次优先保留标签页、历史、书签。单独搜索历史或书签时也会去重。“完整网址搜索”沿用原有排序与去重方式，区别见 [搜索策略说明](docs/默认搜索策略对齐.md)。
+默认模式会先筛选来源、匹配关键词，再合并重复记录。多个实际打开的标签页仍分别保留；书签与历史按相同标题或完整 URL 合并，依次优先保留标签页、历史、书签。单独搜索历史或书签时也会去重。“Full URL Search”沿用原有排序与去重方式，区别见 [搜索策略说明](docs/默认搜索策略对齐.md)。
 
-输入关键词后，前 **2** 条结果显示在**最优建议**中，其余结果按标签页、历史、书签分区展示。历史与书签默认各显示最多 **10** 条，包含最优建议中的对应记录；显示数量和建议数量都可以配置。
+输入关键词后，前 **2** 条结果显示在**Top Suggestions**中，其余结果按标签页、历史、书签分区展示。历史与书签默认各显示最多 **10** 条，包含最优建议中的对应记录；显示数量和建议数量都可以配置。
 
 ![标签页、书签与历史筛选](media/source-filters.gif)
 
 ### 搜索模式与自定义配置
 
-打开 **`⌘K` → 扩展设置**，选择搜索模式并调整参数。两种模式都支持相同的显示数量和严格搜索开关。
+打开 **`⌘K` → Extension Preferences**，选择搜索模式并调整参数。两种模式都支持相同的显示数量和严格搜索开关。
 
-| 配置项                   | 默认值              | 可调整范围与作用                                                                   |
-| ------------------------ | ------------------- | ---------------------------------------------------------------------------------- |
-| 搜索方式                 | 与 Chrome Blaz 一致 | 默认搜索标题与域名；选择“完整网址搜索”可进一步搜索网址其余部分，并保留标题优先排序 |
-| 历史记录时间范围（天）   | 14 天               | 0–36500 天；0 表示不限日期                                                         |
-| 历史记录读取上限         | 1,000 条            | 1–100000 条，按最近访问读取                                                        |
-| 历史记录显示数量         | 10 条               | 每次搜索 1–20 条，包含最优建议中的历史                                             |
-| 书签显示数量             | 10 条               | 每次搜索 1–20 条，包含最优建议中的书签                                             |
-| 最优建议数量             | 2 条                | 输入关键词后显示前 1–10 条；空查询不显示建议区                                     |
-| 严格搜索（英文连续匹配） | 关闭                | 英文字符必须连续命中；中文仍支持拼音与首字母                                       |
+| 配置项                                                  | 默认值            | 可调整范围与作用                                                                      |
+| ------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------- |
+| Search Mode（搜索方式）                                 | Match Chrome Blaz | 默认搜索标题与域名；选择“Full URL Search”可进一步搜索网址其余部分，并保留标题优先排序 |
+| History Date Range (Days)（历史时间范围）               | 14 天             | 0–36500 天；0 表示不限日期                                                            |
+| History Reading Limit（历史读取上限）                   | 1,000 条          | 1–100000 条，按最近访问读取                                                           |
+| History Result Count（历史显示数量）                    | 10 条             | 每次搜索 1–20 条，包含最优建议中的历史                                                |
+| Bookmark Result Count（书签显示数量）                   | 10 条             | 每次搜索 1–20 条，包含最优建议中的书签                                                |
+| Top Suggestions（最优建议数量）                         | 2 条              | 输入关键词后显示前 1–10 条；空查询不显示建议区                                        |
+| Strict Search (Consecutive English Matches)（严格搜索） | 关闭              | 英文字符必须连续命中；中文仍支持拼音与首字母                                          |
 
 读取上限决定参与搜索的历史候选数量，显示数量决定匹配后展示多少条结果；最优建议只是把前几条结果移到单独分区，不额外增加结果。保存后重新打开命令生效。数值超过上限时按上限处理，无效输入使用默认值。
 
 已有用户保存的配置继续保留。Raycast 与 Chrome 版分别保存设置，自定义配置不会自动同步，标签页次序也可能存在差异；详见 [搜索策略说明](docs/默认搜索策略对齐.md)。
 
-![Raycast 搜索参数设置](docs/screenshots/search-settings.png)
+![Raycast 搜索参数设置](media/search-settings.png)
 
-图中读取上限 **2,000** 是已有用户保存的值；新安装默认 **1,000**。
-
-![修改搜索配置并验证生效](media/search-settings.gif)
+![调整历史显示数量并恢复为 10](media/search-settings.gif)
 
 ### 准确切换和打开页面
 
@@ -117,7 +121,7 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 也可以将任意结果打开到新标签页，或替换启动命令时正在使用的标签页。这两种操作沿用启动时捕获的 Chrome 目标；目标已关闭或失效时会提示失败，避免打开到其他标签。
 
-![切换已有标签与新标签打开](media/open-actions.gif)
+按 `⌘Enter` 在新标签页打开，按 `⇧Enter` 在启动时的当前标签页打开。完整操作见下方快捷键表。
 
 ### 键盘操作与自定义快捷键
 
@@ -131,7 +135,7 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 | 打开动作菜单             | `⌘K`             |
 | 展开／收起可选预览       | `⌘D`，预览可用时 |
 
-打开动作菜单 → **快捷键设置**，可以修改额外绑定或恢复默认，修改结果会跨次启动保留。主要的 `Enter` 和 `⌘Enter` 动作由 Raycast 管理。
+打开动作菜单 → **Shortcut Settings**，可以修改额外绑定或恢复默认，修改结果会跨次启动保留。主要的 `Enter` 和 `⌘Enter` 动作由 Raycast 管理。
 
 需要一键启动时，在 Raycast Settings → Extensions 中为命令设置热键或别名。Raycast 版没有预设全局唤醒热键。
 
@@ -139,11 +143,11 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 ### Chrome 多配置与本地启动缓存
 
-打开动作菜单 → **切换 Chrome 配置**，选择某个配置的书签、历史，或搜索全部配置。标签页仍来自所有可读取的 Chrome 窗口。
+书签和历史初始读取 Chrome 最近使用的配置。打开动作菜单 → **Switch Chrome Profile**，可以选择某个配置，或选 **All Profiles** 搜索全部配置。这个选择只在当前命令内生效；重新打开命令时，会再次采用 Chrome 最近使用的配置。标签页始终来自所有可读取的 Chrome 窗口，不受这个选择影响。
 
 新安装默认读取最近 **14 天、最多 1,000 条**历史记录，两个值都可以在扩展设置中调整；读取上限最高 **100,000 条**，天数填 **0** 表示不限日期。搜索全部配置时，合并后的历史总量也受读取上限约束。已有用户保存的配置继续保留。无痕标签页默认排除，需要时可以在扩展设置中开启。
 
-启动缓存默认开启，在读取最新数据期间先显示少量本地书签、历史快照，并标记缓存状态；缓存历史也按当前时间范围过滤。可以在扩展设置中关闭，或通过动作菜单 → **清除启动缓存** 清理。
+启动缓存默认开启，在读取最新数据期间先显示少量本地书签、历史快照，并标记缓存状态；缓存历史也按当前时间范围过滤。可以在扩展设置中关闭，或通过动作菜单 → **Clear Startup Cache** 清理。
 
 <!-- 演示 GIF：media/profile-settings.gif -->
 
@@ -160,7 +164,7 @@ npm ci
 npm run dev
 ```
 
-构建成功后，打开 Raycast，搜索 `Blazwitcher`，运行 **搜索浏览器**。当前命令与菜单文案为中文。
+构建成功后，打开 Raycast，搜索 `Blazwitcher`，运行 **Search Browser**。命令与菜单采用美式英语，中文网页标题与中文／拼音搜索输入不受影响。
 
 1. 输入标题、拼音、首字母或域名片段。
 2. 用 `↑` / `↓` 选择结果。
@@ -176,7 +180,7 @@ npm run dev
 ## 功能边界与隐私
 
 - 当前支持 **macOS 上的 Google Chrome**，界面运行在 Raycast 内。独立的 [Blazwitcher 浏览器扩展](https://github.com/cjinhuo/blazwitcher) 提供浏览器内界面与 AI 标签分组。
-- 默认搜索标题和域名，“完整网址搜索”进一步支持路径、查询参数与片段；可选预览不会增加正文搜索、摘要或 AI 功能。
+- 默认搜索标题和域名，“Full URL Search”进一步支持路径、查询参数与片段；可选预览不会增加正文搜索、摘要或 AI 功能。
 - 当前结果列表没有彩色命中高亮。
 - 浏览数据在本机搜索。Chrome 的书签、历史和网站图标数据库保持只读；不读取 Chrome Cookie，也不向搜索或 AI 服务上传浏览数据。
 - 可选启动缓存保存标题、网址等记录字段，每个配置最多 100 条书签和 100 条历史，有效期 5 分钟，总容量限制为 512 KB；不保存标签页或无痕数据。
@@ -186,6 +190,6 @@ npm run dev
 
 开发和排查请参考 [CONTRIBUTING.md](CONTRIBUTING.md)，历史验证的范围见 [验证记录](docs/验证记录.md)。反馈问题时，请在 [GitHub Issues](https://github.com/cjinhuo/blazwitcher-raycast/issues) 中提供复现步骤。
 
-准备录制 GIF 或截图时，可按 [素材录制清单](docs/media-guide.md) 操作，清单包含场景、文件名与商店截图要求。
+准备录制 GIF 或截图时，可按 [素材录制清单](docs/media-guide.md) 操作；商店截图、账号与发布步骤见 [Store 提交指南](docs/store-submission.md)。
 
 [MIT 许可证](LICENSE) · [第三方声明](THIRD_PARTY_NOTICES.md)

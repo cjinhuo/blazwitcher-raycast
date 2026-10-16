@@ -64,7 +64,7 @@ export function useBrowserSearch(
           })
           .catch((error: Error) => {
             if (live && error.message !== "STALE_RESULT")
-              setError("搜索失败，请重新打开命令后重试。");
+              setError("Search failed. Reopen the command to try again.");
           });
       },
       query ? 80 : 0,
@@ -97,7 +97,9 @@ export function useBrowserSearch(
       );
     } catch (error) {
       if (!(error instanceof Error) || error.message !== "STALE_RESULT")
-        setError("加载更多失败，请重新打开命令后重试。");
+        setError(
+          "Could not load more results. Reopen the command to try again.",
+        );
     } finally {
       if (loadingMore.current === request.requestId)
         loadingMore.current = undefined;
@@ -112,7 +114,7 @@ export function useBrowserSearch(
     loadMore,
     searching: current?.requestId !== request.requestId && !error,
     selectProfile: (id: string) => {
-      if (id !== profileId) {
+      if (id !== (snapshot?.profileId ?? profileId)) {
         cancel();
         setProfileId(id);
       }
