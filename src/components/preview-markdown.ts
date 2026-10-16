@@ -47,16 +47,16 @@ function escapeMarkdown(value: string) {
   return value.replace(/&/g, "&amp;").replace(/([\\`*_{}[\]<>#+!|$])/g, "\\$1");
 }
 
-function escapeMathText(value: string) {
-  const escapes: Record<string, string> = {
-    "\\": "\\textbackslash{}",
-    "^": "\\textasciicircum{}",
-    "~": "\\textasciitilde{}",
-  };
-  return value.replace(
-    /[\\^~$%_#&{}]/g,
-    (character) => escapes[character] ?? `\\${character}`,
+function highlightedText(value: string) {
+  const text = value.replace(/\r\n|\r|\n/g, " ");
+  const longestFence = Math.max(
+    0,
+    ...Array.from(text.matchAll(/`+/g), (match) => match[0].length),
   );
+  const fence = "`".repeat(longestFence + 1);
+  const padding =
+    /^`|`$/.test(text) || (/^ .* $/.test(text) && /[^ ]/.test(text)) ? " " : "";
+  return `${fence}${padding}${text}${padding}${fence}`;
 }
 
 function matchedMarkdown(value: string, ranges: Range[], offset = 0) {
@@ -69,10 +69,8 @@ function matchedMarkdown(value: string, ranges: Range[], offset = 0) {
   const parts: string[] = [];
   for (const [start, end] of normalized) {
     parts.push(escapeMarkdown(text.slice(cursor, start)));
-    // 原生预览支持 LaTeX 颜色；仅给搜索引擎返回的原文区间着色。
-    parts.push(
-      `\\(\\colorbox{#268DFF}{\\raisebox{-0.2em}{\\textcolor{white}{\\textsf{${escapeMathText(text.slice(start, end + 1))}}}\\hspace{0.2em}}}\\)`,
-    );
+    // 原生行内 code 样式按真实文字尺寸提供圆角底色和四周留白。
+    parts.push(highlightedText(text.slice(start, end + 1)));
     cursor = end + 1;
   }
   parts.push(escapeMarkdown(text.slice(cursor)));

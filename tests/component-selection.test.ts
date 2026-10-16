@@ -210,16 +210,16 @@ test("expanded preview follows the selected result's title and URL matches", asy
   await act(async () => expand.props.onAction());
   const markdown = () =>
     ui.renderer.root.findByType(List.Item.Detail).props.markdown as string;
-  assert.ok(markdown().includes(String.raw`\textsf{fi}`));
-  assert.ok(markdown().includes(String.raw`\textsf{example}`));
+  assert.ok(markdown().includes("`fi`"));
+  assert.ok(markdown().includes("`example`"));
 
   await act(async () => ui.list().props.onSelectionChange("second"));
-  assert.ok(markdown().includes(String.raw`\textsf{sec}`));
-  assert.ok(!markdown().includes(String.raw`\textsf{fi}`));
+  assert.ok(markdown().includes("`sec`"));
+  assert.ok(!markdown().includes("`fi`"));
 
   page = results(["second"]);
   page.results[0].titleRanges = [[3, 5]];
   await ui.update();
-  assert.ok(markdown().includes(String.raw`\textsf{ond}`));
-  assert.ok(!markdown().includes(String.raw`\textsf{sec}`));
+  assert.ok(markdown().includes("`ond`"));
+  assert.ok(!markdown().includes("`sec`"));
 });

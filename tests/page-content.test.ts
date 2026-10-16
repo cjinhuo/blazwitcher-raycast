@@ -245,11 +245,11 @@ test("预览复用拼音和域名命中范围，只高亮选中的原始文字",
     false,
     result,
   );
-  assert.ok(markdown.includes(String.raw`\textsf{周报}`));
-  assert.ok(markdown.includes(String.raw`\textsf{example}`));
+  assert.ok(markdown.includes("`周报`"));
+  assert.ok(markdown.includes("`example`"));
   assert.ok(markdown.includes("/report?q=zhoubao"));
   assert.ok(markdown.endsWith("正文里的周报与 example 保持原样"));
-  assert.equal((markdown.match(/\\colorbox/g) ?? []).length, 2);
+  assert.ok(!markdown.includes("\\colorbox"));
   assert.deepEqual(result, original);
 });
 
@@ -265,7 +265,7 @@ test("预览完整 URL 的路径命中保持可见，链接仍指向原始 URL",
   );
   assert.ok(result);
   const markdown = resultDetailMarkdown(result.entry, {}, false, result);
-  assert.ok(markdown.includes(String.raw`\textsf{reference}`));
+  assert.ok(markdown.includes("`reference`"));
   assert.ok(markdown.includes("https://example.com/api/"));
   assert.ok(
     markdown.includes(
@@ -283,7 +283,7 @@ test("预览清理标题开头不可见字符后，原始命中位置不会偏�
   };
   const markdown = resultDetailMarkdown(result.entry, {}, false, result);
   assert.ok(markdown.startsWith("### 2026 "));
-  assert.ok(markdown.includes(String.raw`\textsf{周报}`));
+  assert.ok(markdown.includes("`周报`"));
   assert.ok(!markdown.includes("\u200b"));
 });
 
@@ -300,9 +300,8 @@ test("分散和相邻命中合并正确，emoji 前后的文字与原始范围�
   };
   const markdown = resultDetailMarkdown(result.entry, {}, false, result);
   assert.ok(markdown.startsWith("### 😄"));
-  assert.ok(markdown.includes(String.raw`\textsf{周会}`));
-  assert.ok(markdown.includes(String.raw`\textsf{报}`));
-  assert.equal((markdown.match(/\\colorbox/g) ?? []).length, 2);
+  assert.ok(markdown.includes("`周会`"));
+  assert.ok(markdown.includes("`报`"));
   assert.deepEqual(result.titleRanges, [
     [6, 6],
     [2, 2],
@@ -325,16 +324,25 @@ test("空命中不产生高亮，标题的 Markdown 和公式符号按文字显�
   assert.ok(markdown.includes("Loading page content…"));
 });
 
-test("命中文字中的 TeX 特殊字符只能作为文字，不能改变预览格式", () => {
+test("命中文字中的 Markdown 特殊字符只能作为文字，不能改变预览格式", () => {
   const title = String.raw`a_b#c&d%e$f{g}\href^~`;
   const markdown = resultDetailMarkdown({ ...entry, title }, {}, false, {
     titleRanges: [[0, title.length - 1]],
     urlRanges: [],
   });
-  assert.ok(
-    markdown.includes(
-      String.raw`\textsf{a\_b\#c\&d\%e\$f\{g\}\textbackslash{}href\textasciicircum{}\textasciitilde{}}`,
-    ),
-  );
-  assert.ok(!markdown.includes(String.raw`\href^`));
+  assert.ok(markdown.includes("`" + title + "`"));
+});
+
+test("命中包含反引号或首尾空格时仍保持完整的单个高亮", () => {
+  for (const [title, expected] of [
+    ["a``b", "```a``b```"],
+    ["`code`", "`` `code` ``"],
+    [" word ", "`  word  `"],
+  ]) {
+    const markdown = resultDetailMarkdown({ ...entry, title }, {}, false, {
+      titleRanges: [[0, title.length - 1]],
+      urlRanges: [],
+    });
+    assert.ok(markdown.startsWith("### " + expected));
+  }
 });
