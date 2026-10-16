@@ -15,7 +15,17 @@ const host = (name: string) => (props: HostProps) =>
 // Raycast native views cannot run in Node. Keep component selection and actions real.
 export const List = Object.assign(host("list"), {
   Section: host("section"),
-  Item: Object.assign(host("item"), { Detail: host("detail") }),
+  Item: Object.assign(
+    (props: HostProps) =>
+      createElement(
+        "item",
+        props,
+        props.children,
+        props.detail as ReactNode,
+        props.actions as ReactNode,
+      ),
+    { Detail: host("detail") },
+  ),
   Dropdown: Object.assign(host("dropdown"), { Item: host("dropdown-item") }),
   EmptyView: host("empty-view"),
 });
@@ -185,4 +195,31 @@ test("source changes and empty results do not retain the old preview entry", asy
   await act(async () => ui.list().props.onSelectionChange(null));
   await ui.update();
   assert.equal(previewEntry, undefined);
+});
+
+test("expanded preview follows the selected result's title and URL matches", async (t) => {
+  const ui = await mount(t);
+  page!.results[0].titleRanges = [[0, 1]];
+  page!.results[0].urlRanges = [[8, 14]];
+  page!.results[1].titleRanges = [[0, 2]];
+  await ui.update();
+  const expand = ui.renderer.root
+    .findAllByType(Action)
+    .find((action) => action.props.title === "Expand Preview");
+  assert.ok(expand);
+  await act(async () => expand.props.onAction());
+  const markdown = () =>
+    ui.renderer.root.findByType(List.Item.Detail).props.markdown as string;
+  assert.ok(markdown().includes(String.raw`\textsf{fi}`));
+  assert.ok(markdown().includes(String.raw`\textsf{example}`));
+
+  await act(async () => ui.list().props.onSelectionChange("second"));
+  assert.ok(markdown().includes(String.raw`\textsf{sec}`));
+  assert.ok(!markdown().includes(String.raw`\textsf{fi}`));
+
+  page = results(["second"]);
+  page.results[0].titleRanges = [[3, 5]];
+  await ui.update();
+  assert.ok(markdown().includes(String.raw`\textsf{ond}`));
+  assert.ok(!markdown().includes(String.raw`\textsf{sec}`));
 });

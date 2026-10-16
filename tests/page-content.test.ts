@@ -9,6 +9,7 @@ import {
   resultDetailMarkdown,
 } from "../src/components/preview-markdown";
 import type { BrowserEntry } from "../src/types";
+import { SearchIndex } from "../src/search/engine";
 
 const entry: BrowserEntry = {
   id: "tab:17",
@@ -219,9 +220,121 @@ test("基础信息转义 Markdown，域名链接仍指向完整原始地址", ()
   assert.ok(markdown.includes("标题 \\[链接\\]"));
   assert.ok(
     markdown.includes(
-      "[example.com](<https://example.com/path?q=hello%20world>)",
+      "[https://example.com/path?q=hello world](<https://example.com/path?q=hello%20world>)",
     ),
   );
   assert.ok(markdown.includes("正文不可用"));
   assert.equal(value.title, "\u200b标题 [链接]");
+});
+
+test("预览复用拼音和域名命中范围，只高亮选中的原始文字", async () => {
+  const value = {
+    ...entry,
+    title: "2026 H1 周报 - 飞书云文档",
+    url: "https://example.com/report?q=zhoubao",
+  };
+  const [result] = await new SearchIndex([value]).search(
+    "zhoubao example",
+    "all",
+  );
+  assert.ok(result);
+  const original = structuredClone(result);
+  const markdown = resultDetailMarkdown(
+    result.entry,
+    { markdown: "正文里的周报与 example 保持原样" },
+    false,
+    result,
+  );
+  assert.ok(markdown.includes(String.raw`\textsf{周报}`));
+  assert.ok(markdown.includes(String.raw`\textsf{example}`));
+  assert.ok(markdown.includes("/report?q=zhoubao"));
+  assert.ok(markdown.endsWith("正文里的周报与 example 保持原样"));
+  assert.equal((markdown.match(/\\colorbox/g) ?? []).length, 2);
+  assert.deepEqual(result, original);
+});
+
+test("预览完整 URL 的路径命中保持可见，链接仍指向原始 URL", async () => {
+  const value = {
+    ...entry,
+    title: "API Docs",
+    url: "https://example.com/api/reference?q=hello world#details",
+  };
+  const [result] = await new SearchIndex([value], "full-url").search(
+    "reference",
+    "all",
+  );
+  assert.ok(result);
+  const markdown = resultDetailMarkdown(result.entry, {}, false, result);
+  assert.ok(markdown.includes(String.raw`\textsf{reference}`));
+  assert.ok(markdown.includes("https://example.com/api/"));
+  assert.ok(
+    markdown.includes(
+      "(<https://example.com/api/reference?q=hello%20world#details>)",
+    ),
+  );
+});
+
+test("预览清理标题开头不可见字符后，原始命中位置不会偏移", () => {
+  const result = {
+    entry: { ...entry, title: "\u200b\u200b2026 周报" },
+    titleRanges: [[7, 8]] as [number, number][],
+    urlRanges: [],
+    score: 0,
+  };
+  const markdown = resultDetailMarkdown(result.entry, {}, false, result);
+  assert.ok(markdown.startsWith("### 2026 "));
+  assert.ok(markdown.includes(String.raw`\textsf{周报}`));
+  assert.ok(!markdown.includes("\u200b"));
+});
+
+test("分散和相邻命中合并正确，emoji 前后的文字与原始范围保持完整", () => {
+  const result = {
+    entry: { ...entry, title: "😄周会和日报" },
+    titleRanges: [
+      [6, 6],
+      [2, 2],
+      [3, 3],
+    ] as [number, number][],
+    urlRanges: [],
+    score: 0,
+  };
+  const markdown = resultDetailMarkdown(result.entry, {}, false, result);
+  assert.ok(markdown.startsWith("### 😄"));
+  assert.ok(markdown.includes(String.raw`\textsf{周会}`));
+  assert.ok(markdown.includes(String.raw`\textsf{报}`));
+  assert.equal((markdown.match(/\\colorbox/g) ?? []).length, 2);
+  assert.deepEqual(result.titleRanges, [
+    [6, 6],
+    [2, 2],
+    [3, 3],
+  ]);
+});
+
+test("空命中不产生高亮，标题的 Markdown 和公式符号按文字显示", () => {
+  const result = {
+    entry: { ...entry, title: "[文档] **内容** $price &copy;" },
+    titleRanges: [],
+    urlRanges: [],
+    score: 0,
+  };
+  const markdown = resultDetailMarkdown(result.entry, {}, true, result);
+  assert.ok(!markdown.includes("\\colorbox"));
+  assert.ok(
+    markdown.includes(String.raw`\[文档\] \*\*内容\*\* \$price &amp;copy;`),
+  );
+  assert.ok(markdown.includes("Loading page content…"));
+});
+
+test("命中文字中的 TeX 特殊字符只能作为文字，不能改变预览格式", () => {
+  const title = String.raw`a_b#c&d%e$f{g}\href^~`;
+  const markdown = resultDetailMarkdown({ ...entry, title }, {}, false, {
+    titleRanges: [[0, title.length - 1]],
+    urlRanges: [],
+  });
+  assert.ok(
+    markdown.includes(
+      String.raw`\textsf{a\_b\#c\&d\%e\$f\{g\}\textbackslash{}href\textasciicircum{}\textasciitilde{}}`,
+    ),
+  );
+  assert.ok(!markdown.includes(String.raw`\href^`));
 });

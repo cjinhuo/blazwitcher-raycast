@@ -1,5 +1,11 @@
-import { sourceNames, type BrowserEntry } from "../types";
+import {
+  sourceNames,
+  type BrowserEntry,
+  type Range,
+  type SearchResult,
+} from "../types";
 import type { PagePreview } from "../browser/page-content";
+import { normalizeRanges } from "../search/highlight";
 
 export function compactPreviewMarkdown(markdown: string) {
   let fence: string | undefined;
@@ -38,13 +44,46 @@ export function displayTitle(title: string) {
 }
 
 function escapeMarkdown(value: string) {
-  return value.replace(/([\\`*_{}[\]<>#+!|])/g, "\\$1");
+  return value.replace(/&/g, "&amp;").replace(/([\\`*_{}[\]<>#+!|$])/g, "\\$1");
+}
+
+function escapeMathText(value: string) {
+  const escapes: Record<string, string> = {
+    "\\": "\\textbackslash{}",
+    "^": "\\textasciicircum{}",
+    "~": "\\textasciitilde{}",
+  };
+  return value.replace(
+    /[\\^~$%_#&{}]/g,
+    (character) => escapes[character] ?? `\\${character}`,
+  );
+}
+
+function matchedMarkdown(value: string, ranges: Range[], offset = 0) {
+  const text = value.slice(offset);
+  const normalized = normalizeRanges(
+    ranges.map(([start, end]) => [start - offset, end - offset]),
+    text.length,
+  );
+  let cursor = 0;
+  const parts: string[] = [];
+  for (const [start, end] of normalized) {
+    parts.push(escapeMarkdown(text.slice(cursor, start)));
+    // 原生预览支持 LaTeX 颜色；仅给搜索引擎返回的原文区间着色。
+    parts.push(
+      `\\(\\colorbox{#268DFF}{\\raisebox{-0.2em}{\\textcolor{white}{\\textsf{${escapeMathText(text.slice(start, end + 1))}}}\\hspace{0.2em}}}\\)`,
+    );
+    cursor = end + 1;
+  }
+  parts.push(escapeMarkdown(text.slice(cursor)));
+  return parts.join("");
 }
 
 export function resultDetailMarkdown(
   entry: BrowserEntry,
   preview: PagePreview,
   isLoading: boolean,
+  matches?: Pick<SearchResult, "titleRanges" | "urlRanges">,
 ) {
   const context = [
     sourceNames[entry.source],
@@ -58,11 +97,16 @@ export function resultDetailMarkdown(
     .join(" · ");
   const visited =
     entry.visitedAt === undefined ? undefined : new Date(entry.visitedAt);
-  let address = escapeMarkdown(entry.url);
+  const title = matchedMarkdown(
+    entry.title,
+    matches?.titleRanges ?? [],
+    entry.title.length - displayTitle(entry.title).length,
+  );
+  let address = matchedMarkdown(entry.url, matches?.urlRanges ?? []);
   try {
     const url = new URL(entry.url);
     if (url.protocol === "http:" || url.protocol === "https:")
-      address = `[${escapeMarkdown(url.hostname)}](<${entry.url.replace(/[<>\s]/g, encodeURIComponent)}>)`;
+      address = `[${address}](<${entry.url.replace(/[<>\\\s]/g, encodeURIComponent)}>)`;
   } catch {
     /* 非标准地址仍按文本展示。 */
   }
@@ -72,8 +116,9 @@ export function resultDetailMarkdown(
       ? "Loading page content…"
       : preview.message;
   return [
-    `### ${escapeMarkdown(displayTitle(entry.title))}`,
-    `${escapeMarkdown(context)} · ${address}`,
+    `### ${title}`,
+    escapeMarkdown(context),
+    address,
     visited && !Number.isNaN(visited.getTime())
       ? `Last visited: ${visited.toLocaleString("en-US", { hour12: false })}`
       : undefined,
