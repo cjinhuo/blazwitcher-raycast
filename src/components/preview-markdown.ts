@@ -1,11 +1,6 @@
-import {
-  sourceNames,
-  type BrowserEntry,
-  type Range,
-  type SearchResult,
-} from "../types";
+import type { BrowserEntry, SearchResult } from "../types";
 import type { PagePreview } from "../browser/page-content";
-import { normalizeRanges } from "../search/highlight";
+import { previewFieldSvg } from "./preview-field";
 
 export function compactPreviewMarkdown(markdown: string) {
   let fence: string | undefined;
@@ -47,36 +42,6 @@ function escapeMarkdown(value: string) {
   return value.replace(/&/g, "&amp;").replace(/([\\`*_{}[\]<>#+!|$])/g, "\\$1");
 }
 
-function highlightedText(value: string) {
-  const text = value.replace(/\r\n|\r|\n/g, " ");
-  const longestFence = Math.max(
-    0,
-    ...Array.from(text.matchAll(/`+/g), (match) => match[0].length),
-  );
-  const fence = "`".repeat(longestFence + 1);
-  const padding =
-    /^`|`$/.test(text) || (/^ .* $/.test(text) && /[^ ]/.test(text)) ? " " : "";
-  return `${fence}${padding}${text}${padding}${fence}`;
-}
-
-function matchedMarkdown(value: string, ranges: Range[], offset = 0) {
-  const text = value.slice(offset);
-  const normalized = normalizeRanges(
-    ranges.map(([start, end]) => [start - offset, end - offset]),
-    text.length,
-  );
-  let cursor = 0;
-  const parts: string[] = [];
-  for (const [start, end] of normalized) {
-    parts.push(escapeMarkdown(text.slice(cursor, start)));
-    // 原生行内 code 样式按真实文字尺寸提供圆角底色和四周留白。
-    parts.push(highlightedText(text.slice(start, end + 1)));
-    cursor = end + 1;
-  }
-  parts.push(escapeMarkdown(text.slice(cursor)));
-  return parts.join("");
-}
-
 export function resultDetailMarkdown(
   entry: BrowserEntry,
   preview: PagePreview,
@@ -84,7 +49,6 @@ export function resultDetailMarkdown(
   matches?: Pick<SearchResult, "titleRanges" | "urlRanges">,
 ) {
   const context = [
-    sourceNames[entry.source],
     entry.profile?.name,
     entry.tabGroup?.title,
     entry.incognito ? "Incognito" : undefined,
@@ -95,12 +59,19 @@ export function resultDetailMarkdown(
     .join(" · ");
   const visited =
     entry.visitedAt === undefined ? undefined : new Date(entry.visitedAt);
-  const title = matchedMarkdown(
+  const title = `![${escapeMarkdown(displayTitle(entry.title))}](${previewFieldSvg(
     entry.title,
     matches?.titleRanges ?? [],
+    "title",
     entry.title.length - displayTitle(entry.title).length,
-  );
-  let address = matchedMarkdown(entry.url, matches?.urlRanges ?? []);
+    entry.source,
+  )})`;
+  const visibleUrl = entry.url.split(/[?#]/, 1)[0];
+  let address = `![${escapeMarkdown(visibleUrl)}](${previewFieldSvg(
+    visibleUrl,
+    matches?.urlRanges ?? [],
+    "url",
+  )})`;
   try {
     const url = new URL(entry.url);
     if (url.protocol === "http:" || url.protocol === "https:")
@@ -114,7 +85,7 @@ export function resultDetailMarkdown(
       ? "Loading page content…"
       : preview.message;
   return [
-    `### ${title}`,
+    title,
     escapeMarkdown(context),
     address,
     visited && !Number.isNaN(visited.getTime())

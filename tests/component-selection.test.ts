@@ -7,6 +7,7 @@ import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { SearchPage } from "../src/browser/service-types";
 import type { BrowserEntry, Scope } from "../src/types";
 import { effectiveShortcuts } from "../src/shortcuts";
+import { previewImages, previewMatches } from "./fixtures/preview-images";
 
 type HostProps = Record<string, unknown> & { children?: ReactNode };
 const host = (name: string) => (props: HostProps) =>
@@ -210,16 +211,22 @@ test("expanded preview follows the selected result's title and URL matches", asy
   await act(async () => expand.props.onAction());
   const markdown = () =>
     ui.renderer.root.findByType(List.Item.Detail).props.markdown as string;
-  assert.ok(markdown().includes("`fi`"));
-  assert.ok(markdown().includes("`example`"));
+  assert.deepEqual(previewImages(markdown()).map(previewMatches), [
+    ["fi"],
+    ["example"],
+  ]);
 
   await act(async () => ui.list().props.onSelectionChange("second"));
-  assert.ok(markdown().includes("`sec`"));
-  assert.ok(!markdown().includes("`fi`"));
+  assert.deepEqual(previewImages(markdown()).map(previewMatches), [
+    ["sec"],
+    [],
+  ]);
 
   page = results(["second"]);
   page.results[0].titleRanges = [[3, 5]];
   await ui.update();
-  assert.ok(markdown().includes("`ond`"));
-  assert.ok(!markdown().includes("`sec`"));
+  assert.deepEqual(previewImages(markdown()).map(previewMatches), [
+    ["ond"],
+    [],
+  ]);
 });
