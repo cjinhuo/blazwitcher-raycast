@@ -33,3 +33,8 @@
 - `../raycast-extensions/extensions/google-chrome`：读取、列表与 Chrome 控制。
 - `../text-search-engine`：拼音匹配、范围约定及 DOM 高亮组件。
 - `../blazwitcher/packages/blazwitcher-extension`：组合字段搜索、排序与来源筛选。
+
+## Cursor Cloud specific instructions
+
+- Linux agents can `npm ci`, then run `npm test`, `npm run typecheck`, `npx ray lint`, and `npx ray build -e dist -o dist`. `ray build` writes gitignored `raycast-env.d.ts`, which `npm run typecheck` needs, so build before typecheck on a fresh checkout.
+- `npm run dev` (`ray develop`) imports the command into the Raycast app. This environment has no Raycast app and no Chrome profile, so it cannot verify the native command UI or `npm run test:local`.
