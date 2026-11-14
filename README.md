@@ -153,9 +153,20 @@ The startup cache is enabled by default. It displays a small local snapshot of b
 
 ## Install and get started
 
-The extension is currently installed from source; a Raycast Store installation link will be added after publication.
+Install [Blazwitcher from the Raycast Store](https://www.raycast.com/julian0197/blazwitcher).
 
-Requirements: **macOS**, **Google Chrome**, **Raycast**, and **Node.js 22.22.2 or later** for installing from source. Start Chrome at least once before using the extension.
+Requirements: **macOS**, **Google Chrome**, and **Raycast**. Start Chrome at least once before using the extension.
+
+After installation, open Raycast, search for `Blazwitcher`, and run **Search Browser**. The command and menu labels use US English; Chinese titles and search queries are fully supported.
+
+1. Enter a title, Pinyin, initials, or domain fragment.
+2. Select the result with `↑` / `↓`.
+3. Press `Enter` to focus or open the page, or `⌘K` for more actions.
+4. For page preview, install and enable the official [Raycast Browser Extension](https://www.raycast.com/browser-extension) in Chrome, then select an open tab and press `⌘D`.
+
+### Install from source (for developers)
+
+Requires **Node.js 22.22.2 or later** in addition to the requirements above.
 
 ```bash
 git clone https://github.com/cjinhuo/blazwitcher-raycast.git
@@ -163,13 +174,6 @@ cd blazwitcher-raycast
 npm ci
 npm run dev
 ```
-
-After the build succeeds, open Raycast, search for `Blazwitcher`, and run **Search Browser**. The command and menu labels use US English; Chinese titles and search queries are fully supported.
-
-1. Enter a title, Pinyin, initials, or domain fragment.
-2. Select the result with `↑` / `↓`.
-3. Press `Enter` to focus or open the page, or `⌘K` for more actions.
-4. For page preview, install and enable the official [Raycast Browser Extension](https://www.raycast.com/browser-extension) in Chrome, then select an open tab and press `⌘D`.
 
 `npm run dev` imports the extension and watches for changes. After import, `Ctrl+C` stops the watcher; the installed command remains available. For updates, run `git pull`, `npm ci`, and `npm run dev` again. More setup and troubleshooting details are in the [contributing guide](CONTRIBUTING.md).
 
