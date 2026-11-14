@@ -153,9 +153,20 @@ JXA 通过 macOS 的 `osascript` 执行，与 AppleScript 使用同一套自动�
 
 ## 安装与开始使用
 
-目前通过源码安装；上架后会补充 Raycast Store 安装链接。
+从 [Raycast Store 安装 Blazwitcher](https://www.raycast.com/julian0197/blazwitcher)。
 
-需要 **macOS**、**Google Chrome**、**Raycast**，以及用于源码安装的 **Node.js 22.22.2 或更新版本**。使用前请先启动一次 Chrome。
+需要 **macOS**、**Google Chrome** 和 **Raycast**。使用前请先启动一次 Chrome。
+
+安装完成后，打开 Raycast，搜索 `Blazwitcher`，运行 **Search Browser**。命令与菜单采用美式英语，中文网页标题与中文／拼音搜索输入不受影响。
+
+1. 输入标题、拼音、首字母或域名片段。
+2. 用 `↑` / `↓` 选择结果。
+3. 按 `Enter` 打开或切换页面，按 `⌘K` 查看更多动作。
+4. 需要正文预览时，在 Chrome 中安装并启用官方 [Raycast Browser Extension](https://www.raycast.com/browser-extension)，然后选中已打开的标签页，按 `⌘D`。
+
+### 从源码安装（开发者）
+
+除上述要求外，还需要 **Node.js 22.22.2 或更新版本**。
 
 ```bash
 git clone https://github.com/cjinhuo/blazwitcher-raycast.git
@@ -163,13 +174,6 @@ cd blazwitcher-raycast
 npm ci
 npm run dev
 ```
-
-构建成功后，打开 Raycast，搜索 `Blazwitcher`，运行 **Search Browser**。命令与菜单采用美式英语，中文网页标题与中文／拼音搜索输入不受影响。
-
-1. 输入标题、拼音、首字母或域名片段。
-2. 用 `↑` / `↓` 选择结果。
-3. 按 `Enter` 打开或切换页面，按 `⌘K` 查看更多动作。
-4. 需要正文预览时，在 Chrome 中安装并启用官方 [Raycast Browser Extension](https://www.raycast.com/browser-extension)，然后选中已打开的标签页，按 `⌘D`。
 
 `npm run dev` 会导入扩展并监听代码变化。导入完成后按 `Ctrl+C` 停止监听，已安装的命令仍可使用。更新时重新执行 `git pull`、`npm ci`、`npm run dev`。更多配置与排查步骤见 [贡献指南](CONTRIBUTING.md)。
 
